@@ -1,0 +1,956 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Diving into MPEG-DASH with ffmpeg and NGINX</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-interactiveBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="4da282a6-9dbe-4ed4-ad21-f5cfa205c825" class="page sans"><header><h1 class="page-title">Diving into MPEG-DASH with ffmpeg and NGINX</h1><p class="page-description"></p></header><div class="page-body"><p id="acf82ef0-492f-40d3-bd71-8cd8165e0154" class=""><strong>By Phillip Adler</strong></p><p id="82585906-0a72-4d46-b27a-1a50d267d939" class="">
+</p><p id="1716b2e6-e008-45e7-bedb-87438934f91c" class="">In this article, we will look into converting a common mp4 file into fragmented mp4 files and Dash Manifest files, which is used by something called MPEG-DASH (Dynamic Adaptive Streaming over HTTP), that is used to dynamically stream content to end users on the web, and allows for functionality such as video scrolling with partial loading and adaptive bitrate, which is something that sending over mp4 files as an entire video file doesn’t. </p><p id="ef2ca692-f525-423d-824d-8988e4839886" class="">
+We will use a common tool for such video transcoding (FFMEPG), discuss how to architect infrastructure to publicly upload and share videos to the network, and look into how MPEG-DASH works by looking at the output. </p><p id="b3a5e8f6-637b-40ea-af5c-a130117d54df" class="">
+</p><p id="37d64f07-6a85-455d-9994-cf5033489872" class="">The FFMPEG Project</p><p id="534bd65d-ac73-4978-afd4-536674569524" class=""><a href="https://ffmpeg.org/ffmpeg.html">https://ffmpeg.org/ffmpeg.html</a></p><p id="b4c0fe61-def1-452c-9537-677b1fa93a80" class="">FFMPEG is an open source media which has a bunch of multimedia tools for dealing with common container formats and codecs, and can do things like create RTP streams, read from RTP streams, transcode videos, create MPEG-DASH and fragmented mp4 and manifests files, change frame rates, transcode with certain bit rates, etc.</p><p id="56699291-2f69-4de7-b95a-c7d7515ce0a0" class="">
+</p><p id="82baff0b-0eeb-4890-9506-f965546736e3" class="">For this article we will be using mp4 video samples:</p><p id="e5d32848-30ca-4bd1-9972-288d478b52cc" class=""><a href="https://test-videos.co.uk/bigbuckbunny/mp4-h264">https://test-videos.co.uk/bigbuckbunny/mp4-h264</a></p><p id="aa37d778-3039-494f-8142-affb84fd95c8" class="">
+</p><p id="3641920d-a64d-470b-a5ef-7f01d79005b6" class="">
+</p><h2 id="df787b24-456b-482f-b78d-a6e12721d96b" class="">Briefly, what is an mp4 File?</h2><p id="75d9cdc6-76aa-418b-925c-1b4c5d76e1d3" class="">MP4 File is a container format for multimedia that can contains metadata about it contents, as well its contents, which are referred to as streams. If you want to look more into mp4 file contents and information about tracks, lookup ES (Elementary Streams), and PES (Packetized Elementary Streams). But long story short, an mp4 file contains a list of audio, video, subtitle, streams, which users will see upon loading a video and related metainformation. </p><p id="362a779a-51fa-4426-8ca5-e2bd6a531b54" class="">
+</p><p id="b946037d-cf8a-4b55-9429-825f9eaeb052" class="">An Example of Contents in a General Purpose Media File:</p><p id="0f3a94ff-c494-4a54-8545-cf6b3623ac48" class=""><a href="https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Video_and_audio_content">https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Video_and_audio_content</a></p><p id="9f06ae9c-2396-4e78-ab0a-30da569a4375" class="">
+</p><p id="9cf53c05-e1be-44ec-b349-93794f1c5ff2" class="">But Briefly, What you need to know is </p><p id="0ee16917-ca7c-490c-ad32-e2f8a8a2f303" class="">MP4 Container<div class="indented"><p id="bbe93489-b980-4428-8fb2-4004808310a2" class="">→ []Audio Streams<div class="indented"><p id="c9e967d0-0b51-4040-a754-9fa3aaee4c41" class="">Stream #1 = {Codec, Data, Metadata} </p><p id="43e14fb0-11ee-4a1e-a346-373c38b21123" class="">Stream #2 = {Codec, Data, Metadata}</p></div></p></div></p><p id="3ce63f84-421c-4d97-95d8-393e437b12eb" class="">
+</p><p id="d6a30c5c-7624-485d-be69-2b10e7578a11" class="">Codecs are actual compression and representations of the data, </p><p id="08e9b015-676e-4a93-8b80-86818ccbee83" class="">
+</p><p id="ac2d39de-208a-4f5e-b771-80dc3e35c7e5" class="">Lets List What Is Contained Inside our MEPG file</p><pre id="5c7c7023-fe25-4104-aac3-4f7259194ce8" class="code"><code>ffmpeg big_buck_bunny.mp4
+
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from &#x27;big_buck_bunny.mp4&#x27;:
+  Metadata:
+    major_brand     : mp42
+    minor_version   : 1
+    compatible_brands: mp42avc1
+    creation_time   : 2010-02-09T01:55:39.000000Z
+  Duration: 00:01:00.10, start: 0.000000, bitrate: 733 kb/s
+    Stream #0:0(eng): Audio: aac (LC) (mp4a / 0x6134706D), 22050 Hz, stereo, fltp, 65 kb/s (default)
+    Metadata:
+      creation_time   : 2010-02-09T01:55:39.000000Z
+      handler_name    : Apple Sound Media Handler
+    Stream #0:1(eng): Video: h264 (Constrained Baseline) (avc1 / 0x31637661), yuv420p(tv, smpte170m/smpte170m/bt709), 640x360, 612 kb/s, 23.96 fps, 24 tbr, 600 tbn, 1200 tbc (default)
+    Metadata:
+      creation_time   : 2010-02-09T01:55:39.000000Z
+      handler_name    : Apple Video Media Handler
+    Stream #0:2(eng): Data: none (rtp  / 0x20707472), 45 kb/s
+    Metadata:
+      creation_time   : 2010-02-09T01:55:39.000000Z
+      handler_name    : hint media handler
+    Stream #0:3(eng): Data: none (rtp  / 0x20707472), 5 kb/s
+    Metadata:
+      creation_time   : 2010-02-09T01:55:39.000000Z
+      handler_name    : hint media handler</code></pre><p id="02a2cd2a-8adf-421e-a9ce-62c5be283331" class="">We can see we have a single Video and single Audio track and 2 data tracks. The data tracks will not be used in the output of our mp4 file. The data tracks will not be read as an input to our final MPEG-DASH output files.</p><p id="8c2234c8-9d06-422e-b911-088e72b2b727" class="">
+</p><p id="03ca08fb-6cf0-4ec9-9e59-4be1b52e5692" class="">We can also see the codecs for the Audio (aac) and Video (h264), the pixel format (yuv420p), and other information. </p><p id="3775a8d4-919a-4b9c-9e39-1b877f8e1d66" class="">For More About Pixel Formats , If you find this confusing on why its important :</p><p id="f71c26d0-437f-4281-823b-28b6971b304f" class="">YUV refers to the Color Space Representation, and 420 Corresponds to the subsampling for a group of 4x2 pixels.</p><p id="c4b289c0-614d-4f77-a695-5e89492da40e" class="">
+</p><h1 id="86320803-aa60-45e4-9871-2037621cba97" class="">What does Mpeg-Dash Consist Of</h1><p id="8714fad9-282b-46d8-85c0-1420b892a1b9" class="">Mpeg Dash outputs will be a manifest file, which shows a selection of streams for a client to choose from and is in XML format, init files, which will contain meta information about each selection stream, and a DASH javascript file which is contains a script that can dynamically choose files based on Network bandwidth (in most instances)</p><h2 id="51db200d-661f-475c-961c-27eedd16ca6c" class="">Setting up Nginx and Our HTML File</h2><p id="8ef8e6f9-c5ba-432b-9128-cf4dc6e90d35" class="">
+</p><p id="788f3e1e-3bc4-43ec-9b7a-43ec3f401f30" class="">For This Example, I simply served Static Content With Nginx, There’s various ways you can do this, but using a config file do something like :</p><p id="6aab338a-7764-4001-b6a0-80d82ec2ea43" class="">
+</p><pre id="c1a58b9e-afab-4703-9fa3-d7218635603a" class="code"><code>server {
+	
+
+	location / {
+		root /path/to/your/video/folder;
+		index index.html;
+	}
+	
+
+}</code></pre><p id="24367ea1-c625-4d7d-b435-980cca8f546f" class="">Our Index.html File (Just Shows A Video On The Screen)</p><pre id="90cd9c4b-0bc4-4374-8dc2-b17e6160f80b" class="code"><code>&lt;video id=&quot;videoPlayer&quot; autoplay=&quot;autoplay&quot; controls=&quot;controls&quot; width=&quot;960&quot; height=&quot;540&quot;&gt;
+&lt;/video&gt;
+
+
+&lt;!-- dash-player - no browser is natively playing DASH --&gt;
+&lt;script src=&quot;http://cdn.dashjs.org/v3.1.0/dash.all.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+
+    /* initialize the dash.js player in the #videoPlayer element */
+    (function () {
+        let url = &quot;dash.mpd&quot;;
+        player = dashjs.MediaPlayer().create();
+        player.initialize(document.querySelector(&quot;#videoPlayer&quot;), url, false);
+    })();
+
+&lt;/script&gt;</code></pre><p id="435dd42d-109c-484f-a719-ed928948845c" class="">Here we are just using dash from a CDN, You can download it and server it as static content from your file systems as well, doing something like src=”/js/dash.js” and downloading the js from the CDN to here. </p><p id="5c2fda66-b9fd-4f7d-bf7b-9896d8fba24b" class="">
+</p><p id="39e44ff2-303b-4552-9f29-4bed602294b0" class="">This assumes that the dash manifest and all the files are in the same folder, to change this, modify url variable.</p><h2 id="71edb2cc-5047-4e6f-88d6-ef185d05ab27" class="">Using FFMPEG</h2><p id="651d3ed4-b4c8-4c6a-b53a-1094833fa430" class="">In our examples, we will use 2 different output bitrates and output frame size</p><p id="1a9b7fd9-ac79-4b8f-875e-6ccc1e8383f1" class="">
+</p><p id="393ec78a-c552-4a1f-adaa-55740c2e10ca" class="">First Example FFMPEG Script → Fragment MP4 File Into Separate Audio and Video Adaptation Sets</p><p id="0bb53496-83b0-4287-a76b-3995a2b4b388" class="">
+</p><pre id="62087f96-bdf8-4c7c-9e67-dfe7ba180af6" class="code"><code>IN_VIDEO=$1
+OUTPUT_FOLDER=$2  #Make Sure Both Are Specified
+
+SEG_DURATION=4  #Size of Segments in Seconds, if FPS = 25, It Means 100 Frames Per Segment
+FPS=25 #Frames Per Second
+GOP_SIZE=100 
+# Long Story Short, Video Encoding is Compromises of I,B, and P Frames
+# I Frames are anchor frames which means they are represented by the pixel on a screen
+# That will be encoded with something like Frequency Compression and Huffman Compression
+# (A Lossless + Loss). But they can be independently contrives
+
+# B and P Frames, However, Are Referenced to other frames, in hopes of reducing the 
+# Frequency Information in Frames, 
+
+PRESET_P=veryslow
+
+# My Computer Fan is having issues
+
+
+## Make Sure That Seg_Duration X FPS = GOP_SIZE
+## A GOP size of 100 means that a video decoder can go to the beginning of a fragment
+## And Know THat decoding the frame is independent of previous fragments
+## 
+
+
+V_SIZE_1=416x234
+V_SIZE_2=640X360
+
+#The Two Frame Sizes We Will Be Re-Encoding With
+
+
+## REMOVE THE COMMENTS IN THE BELOW COMMAND TO GET IT TO WORK
+# Now, The Actual FFMPEG Command With Examplanations
+ffmpeg -i $VIDEO_IN -y \
+# -i = INPUT FILE, -y = OverWrite Output Files 
+-preset $PRESET_P -keyint_min $GOP_SIZE -g $GOP_SIZE -sc_threshold 0 -r $FPS -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k -ac 1 -ar 44100 \
+# -preset = Encoding Size
+# -keyint_min, I believe, ensures 1 keyframe per a Fragment
+# -g =&gt; Group Of Frames, Size
+# -r =&gt; Frames Per Second
+# -c:v =&gt; Codec For Videos
+# -pix_fmt =&gt; Pixel Format, Which has how the decompressed, Reproduced Video Images Are Formatted By Colors
+# -c:a =&gt; Codec For Videos 
+# -ac =&gt;  # of Audio Channels          -ar =&gt; Audio Sampling Rate, Here its 44.1 kHZ 
+-map 0:v:0 -s:0 $V_SIZE_2 -b:v:0 800k -maxrate:0 1.10M -bufsize:0 1.75M \
+-map 0:v:0 -s:1 $V_SIZE_1 -b:v:1 145k -maxrate:1 155k -bufsize:1 220k \
+# Map -&gt; 
+# v =&gt; 0:v:0 -&gt; Select From [Index] (0) -&gt; Video Stream -&gt; [Index] (0)
+# s =&gt; (s:n) size of Nth Output  Size in Frame Size Dimensions
+# -b:v:n =&gt; Bitrate of Nth Output
+# -maxrate:n =&gt; Max Bitrate of Nth Output
+# -bufsize:n =&gt; Computation Bufsize of Nth Output
+-map 0:a:0 \
+#Select all Audio Streams From Input -&gt; Leave As Is
+-init_seg_name init\$RepresentationID\$.m4s -media_seg_name dash\$RepresentationID\$-\$Number%03d\$.m4s \
+-use_template 1 -use_timeline 1 \
+    -seg_duration 4 -adaptation_sets &quot;id=0,streams=v id=1,streams=a&quot; \
+    -f dash $Folder_OUT/dash.mpd
+
+# init-seg-name We Will Show Later What init Segments are fore
+# media_seg-Name - Name of all the chunks that will make up the output
+
+#$Representation_ID -&gt; DASH Parameter, We will talk about RepresentationIDs in the 
+#final output manifest files</code></pre><pre id="f94dd232-ea51-4b08-af86-91d601d4f2b2" class="code"><code>#!/bin/bash
+
+VIDEO_IN=$1
+Folder_OUT=$2
+
+SEG_DURATION=4
+FPS=25
+GOP_SIZE=100
+
+PRESET_P=veryslow
+
+V_SIZE_1=416x234
+V_SIZE_2=640X360
+
+
+ffmpeg -i $VIDEO_IN -y \
+    -preset $PRESET_P -keyint_min $GOP_SIZE -g $GOP_SIZE -sc_threshold 0 -r $FPS -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k -ac 1 -ar 44100 \
+    -map 0:v:0 -s:0 $V_SIZE_2 -b:v:0 800k -maxrate:0 1.10M -bufsize:0 1.75M \
+    -map 0:v:0 -s:1 $V_SIZE_1 -b:v:1 145k -maxrate:1 155k -bufsize:1 220k \
+    -map v -s:2 $V_SIZE_2 -b:v:2 500k -maxrate:2 1M -bufsize:2 1.5M \
+    \
+    -map 0:a:0 \
+    -init_seg_name init\$RepresentationID\$.m4s -media_seg_name dash\$RepresentationID\$-\$Number%03d\$.m4s \
+    -use_template 1 -use_timeline 1 \
+    -seg_duration 4 -adaptation_sets &quot;id=0,streams=v id=1,streams=a&quot; \
+    -f dash $Folder_OUT/dash.mpd</code></pre><pre id="28e6ce92-5733-4ea2-935b-0b49e60bac92" class="code"><code>VIDEO_IN=$1
+Folder_OUT=$2
+
+FPS=10
+GOP_SIZE=40
+PRESET_P=veryslow
+V_SIZE_1=416x234
+
+ffmpeg -i $VIDEO_IN -y \
+    -preset $PRESET_P -keyint_min $GOP_SIZE -g $GOP_SIZE -sc_threshold 0 -r $FPS -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 128k -ac 1 -ar 44100 \
+    -map v -s:1 $V_SIZE_1 -b:v:1 145k -maxrate:1 155k -bufsize:1 220k \
+    \
+    -map 0:a:0 \
+    -init_seg_name init\$RepresentationID\$.m4s -media_seg_name dash\$RepresentationID\$-\$Number%03d\$.m4s \
+    -use_template 1 -use_timeline 1 \
+    -seg_duration 4 -adaptation_sets &quot;id=0,streams=v id=1,streams=a&quot; \
+    -f dash $Folder_OUT/dash.mpd</code></pre><p id="1562be6c-317f-4a20-a607-a07d242b125e" class="">
+</p><p id="deed01c1-d067-4fa5-abf7-930e684f5b07" class="">Now load up the webpage served from Nginx on your location Machine. It should look like a plain video file </p><figure id="a2f91d59-e9ed-40e4-9e42-5ded673e4f76" class="image"><a href="Diving%20into%20MPEG-DASH%20with%20ffmpeg%20and%20NGINX%204da282a69dbe4ed4ad21f5cfa205c825/Untitled.png"><img style="width:1315px" src="Diving%20into%20MPEG-DASH%20with%20ffmpeg%20and%20NGINX%204da282a69dbe4ed4ad21f5cfa205c825/Untitled.png"/></a></figure><h2 id="9c2a3767-b199-46fd-9462-43d984a0fdd4" class="">Reconstructing MP4 Files, What are m4s files?</h2><p id="b14dc26d-9d46-4a27-88ef-36c442be1366" class="">The output format, or m4s files, are not actually mp4 files, but rather fragments of a certain mime type (audio/mp4, video/mp4).</p><p id="c17912f1-03e1-49cc-934a-4ddabcac4f93" class="">The only place where meta information about the tracks and codecs and frame size/sampling rate, etc. are stores is actually in the init files (init0 for Representation 0 and init1 for Representation 1, etc.) </p><p id="1ec96575-5742-483f-84f5-07c97f659204" class="">If you run ffprobe on init1.m4s → You’ll get the codec format</p><p id="50088a0a-d454-404b-a9aa-bed542f48a70" class="">If you run ffprobe on dash0-005.m4s → You’ll get an error, where it says invalid format.</p><p id="345b3910-917c-44c7-9202-5c4ab06c5176" class="">
+</p><p id="bf388398-e6ac-44e3-a47e-0548775e90f8" class="">But, if you combine init1.m4s with dash1-001.m4s … dash2-002.m4s, ffprobe works again.</p><p id="9cf481da-b8dc-416e-8959-324e6bc1d850" class="">Lets Try This </p><p id="52aa72de-acbc-49ec-b4a4-43626870cfbe" class="">cat init1.m4s &gt;&gt; file</p><p id="cd452cec-2ed8-45fa-8a9d-bf2fd18d207e" class="">cat chunk1-001.m4s &gt;&gt; file</p><p id="5bfcfd58-3dd7-4fa5-ab35-6ec93687062d" class="">ffprobe now works and you can play this back in a mp4 file</p><p id="a482e8f2-4796-4e3f-ac6f-804b72582854" class="">
+</p><p id="cf27b518-ed96-4e93-a2ce-74a7459266ab" class="">You can now see why the init files are necessary, because they encode metainformation about the rest of that “stream” or track</p><p id="3f260a18-da60-444e-84cb-6f2a95fadcec" class="">
+</p><p id="da285cd1-19ca-41c3-9810-0dab9ffe02c4" class="">This is something called  isobmff, which is intended for remote distribution, such as over the web.</p><p id="e92a13cc-d885-4175-b5d7-225696f71425" class=""><a href="https://www.w3.org/TR/mse-byte-stream-format-isobmff/">https://www.w3.org/TR/mse-byte-stream-format-isobmff/</a></p><p id="4b52950b-9624-493b-8532-9cead9871fb9" class="">
+</p><pre id="c5dc9b01-6fb6-4444-a23e-66a9d842b748" class="code"><code>cat init3.m4s &gt;&gt; playback.m4s
+cat chunk3-001.m4s &gt;&gt; playback.m4s
+ffprobe playback.m4s
+
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from &#x27;playback.m4s&#x27;:
+  Metadata:
+    major_brand     : iso5
+    minor_version   : 512
+    compatible_brands: iso6mp41
+    encoder         : Lavf58.29.100
+  Duration: 00:00:03.95, start: -0.023220, bitrate: 133 kb/s
+    Stream #0:0(und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 130 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler</code></pre><p id="8e46aea9-7890-48f0-842a-6cd1cab6d9dc" class="">If you run this in an mp4 player, you get a sound playback (part of the 2nd Dash Shell Script)</p><p id="ca4338c7-ebee-470d-81ca-0e0ae247f202" class="">
+</p><p id="3ec1b81e-978d-4731-b7a6-8deef44d96ef" class="">You can also “convert it” back to mp4 using</p><pre id="6f17f66f-faa8-4a97-b3a2-cc4b8d642dce" class="code"><code>ffmpeg -i playback.m4s -c copy playback.mp4
+
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from &#x27;playback.m4s&#x27;:
+  Metadata:
+    major_brand     : iso5
+    minor_version   : 512
+    compatible_brands: iso6mp41
+    encoder         : Lavf58.29.100
+  Duration: 00:00:03.95, start: -0.023220, bitrate: 133 kb/s
+    Stream #0:0(und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 130 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler
+Output #0, mp4, to &#x27;playback.mp4&#x27;:
+  Metadata:
+    major_brand     : iso5
+    minor_version   : 512
+    compatible_brands: iso6mp41
+    encoder         : Lavf58.29.100
+    Stream #0:0(und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 130 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler</code></pre><p id="1b399ec2-a31b-4334-98ca-4e21591c0667" class="">
+</p><h1 id="d28ec94d-64be-4358-af04-d9663e27c253" class="">Looking at the MPD file</h1><p id="9d829ca4-0b80-4c68-87d9-558729a5ca96" class="">
+</p><p id="f0848de3-0160-4e1d-80f2-64df50477387" class="">Run ./dash2.sh ./big_buck_bunny.mp4 . </p><p id="9616e966-2ba0-4c89-b16e-7be5a8ee523f" class="">
+</p><pre id="5d366462-9ca6-4987-b633-4a57ef99f155" class="code"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;MPD xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+	xmlns=&quot;urn:mpeg:dash:schema:mpd:2011&quot;
+	xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot;
+	xsi:schemaLocation=&quot;urn:mpeg:DASH:schema:MPD:2011 http://standards.iso.org/ittf/PubliclyAvailableStandards/MPEG-DASH_schema_files/DASH-MPD.xsd&quot;
+	profiles=&quot;urn:mpeg:dash:profile:isoff-live:2011&quot;
+	type=&quot;static&quot;
+	mediaPresentationDuration=&quot;PT1M0.0S&quot;
+	minBufferTime=&quot;PT8.0S&quot;&gt;
+	&lt;ProgramInformation&gt;
+	&lt;/ProgramInformation&gt;
+	&lt;Period id=&quot;0&quot; start=&quot;PT0.0S&quot;&gt;
+		&lt;AdaptationSet id=&quot;0&quot; contentType=&quot;video&quot; segmentAlignment=&quot;true&quot; bitstreamSwitching=&quot;true&quot; lang=&quot;eng&quot;&gt;
+			&lt;Representation id=&quot;0&quot; mimeType=&quot;video/mp4&quot; codecs=&quot;avc1.64001f&quot; bandwidth=&quot;1000000&quot; width=&quot;640&quot; height=&quot;360&quot; frameRate=&quot;25/1&quot;&gt;
+				&lt;SegmentTemplate timescale=&quot;12800&quot; initialization=&quot;init$RepresentationID$.m4s&quot; media=&quot;chunk$RepresentationID$-$Number%03d$.m4s&quot; startNumber=&quot;1&quot;&gt;
+					&lt;SegmentTimeline&gt;
+						&lt;S t=&quot;0&quot; d=&quot;51200&quot; r=&quot;14&quot; /&gt;
+						&lt;S d=&quot;1024&quot; /&gt;
+					&lt;/SegmentTimeline&gt;
+				&lt;/SegmentTemplate&gt;
+			&lt;/Representation&gt;
+			&lt;Representation id=&quot;1&quot; mimeType=&quot;video/mp4&quot; codecs=&quot;avc1.640016&quot; bandwidth=&quot;145000&quot; width=&quot;416&quot; height=&quot;234&quot; frameRate=&quot;25/1&quot;&gt;
+				&lt;SegmentTemplate timescale=&quot;12800&quot; initialization=&quot;init$RepresentationID$.m4s&quot; media=&quot;chunk$RepresentationID$-$Number%03d$.m4s&quot; startNumber=&quot;1&quot;&gt;
+					&lt;SegmentTimeline&gt;
+						&lt;S t=&quot;0&quot; d=&quot;51200&quot; r=&quot;14&quot; /&gt;
+						&lt;S d=&quot;1024&quot; /&gt;
+					&lt;/SegmentTimeline&gt;
+				&lt;/SegmentTemplate&gt;
+			&lt;/Representation&gt;
+			&lt;Representation id=&quot;2&quot; mimeType=&quot;video/mp4&quot; codecs=&quot;avc1.64001f&quot; bandwidth=&quot;500000&quot; width=&quot;640&quot; height=&quot;360&quot; frameRate=&quot;25/1&quot;&gt;
+				&lt;SegmentTemplate timescale=&quot;12800&quot; initialization=&quot;init$RepresentationID$.m4s&quot; media=&quot;chunk$RepresentationID$-$Number%03d$.m4s&quot; startNumber=&quot;1&quot;&gt;
+					&lt;SegmentTimeline&gt;
+						&lt;S t=&quot;0&quot; d=&quot;51200&quot; r=&quot;14&quot; /&gt;
+						&lt;S d=&quot;1024&quot; /&gt;
+					&lt;/SegmentTimeline&gt;
+				&lt;/SegmentTemplate&gt;
+			&lt;/Representation&gt;
+		&lt;/AdaptationSet&gt;
+		&lt;AdaptationSet id=&quot;1&quot; contentType=&quot;audio&quot; segmentAlignment=&quot;true&quot; bitstreamSwitching=&quot;true&quot; lang=&quot;eng&quot;&gt;
+			&lt;Representation id=&quot;3&quot; mimeType=&quot;audio/mp4&quot; codecs=&quot;mp4a.40.2&quot; bandwidth=&quot;128000&quot; audioSamplingRate=&quot;44100&quot;&gt;
+				&lt;AudioChannelConfiguration schemeIdUri=&quot;urn:mpeg:dash:23003:3:audio_channel_configuration:2011&quot; value=&quot;1&quot; /&gt;
+				&lt;SegmentTemplate timescale=&quot;44100&quot; initialization=&quot;init$RepresentationID$.m4s&quot; media=&quot;chunk$RepresentationID$-$Number%03d$.m4s&quot; startNumber=&quot;1&quot;&gt;
+					&lt;SegmentTimeline&gt;
+						&lt;S t=&quot;0&quot; d=&quot;173056&quot; /&gt;
+						&lt;S d=&quot;177152&quot; /&gt;
+						&lt;S d=&quot;176128&quot; r=&quot;2&quot; /&gt;
+						&lt;S d=&quot;177152&quot; /&gt;
+						&lt;S d=&quot;176128&quot; r=&quot;2&quot; /&gt;
+						&lt;S d=&quot;177152&quot; /&gt;
+						&lt;S d=&quot;176128&quot; r=&quot;1&quot; /&gt;
+						&lt;S d=&quot;177152&quot; /&gt;
+						&lt;S d=&quot;176128&quot; r=&quot;1&quot; /&gt;
+						&lt;S d=&quot;9216&quot; /&gt;
+					&lt;/SegmentTimeline&gt;
+				&lt;/SegmentTemplate&gt;
+			&lt;/Representation&gt;
+		&lt;/AdaptationSet&gt;
+	&lt;/Period&gt;
+&lt;/MPD&gt;</code></pre><p id="a39e90d4-875d-40cc-8bcb-c4d329aefa52" class="">
+</p><p id="611811fb-e934-4caa-8e7a-ce8d40b7dd98" class="">
+</p><p id="05fba4bd-a8bc-454e-a735-710e299f3e0a" class="">Output Folder</p><figure id="af17b0fa-e8ce-47a5-a2dd-413badeaa895" class="image"><a href="Diving%20into%20MPEG-DASH%20with%20ffmpeg%20and%20NGINX%204da282a69dbe4ed4ad21f5cfa205c825/Untitled%201.png"><img style="width:1311px" src="Diving%20into%20MPEG-DASH%20with%20ffmpeg%20and%20NGINX%204da282a69dbe4ed4ad21f5cfa205c825/Untitled%201.png"/></a></figure><h2 id="fa051027-23d1-4de5-87b0-f5c3f2bb2fd3" class="">Representation IDs</h2><p id="aacbb5c2-e337-4b9c-a8ec-e5a54c5f71df" class="">Each output in the dash ffmpeg scripts correspond to a single “output”, which is analogous to a stream inside of an mp4 files, as we saw from inspecting the initial mp4 files from ffprobe. In the output of Dash, each one of these corresponds to a Representation ID.</p><p id="062ca395-186a-4aab-afc8-f5d2d269b5e2" class="">With each map operation, we associated the codec, bitrate, buffersize, max buffer rate, and resolution with each video output.</p><p id="8e53491b-4302-49c3-a518-838b21452b8a" class="">There is only one Representation ID.</p><h2 id="cb67968c-542f-444c-b661-5b2209fe0e99" class="">Adaptation Sets</h2><p id="00696d92-f0f0-4c3a-b904-04288f380a3c" class="">1 or More Representation Sets belongs to an “Adaptation Set”, and in our ffmpeg script, we corresponded output streams to a particular Adaptation set with</p><pre id="f683f7ad-757f-48d0-961e-4aeec383994d" class="code"><code>-adaptation_sets &quot;id=0,streams=v id=1,streams=a&quot;</code></pre><p id="94542522-f7c7-48a6-a032-9ba8c12d5a59" class="">Which selects all video streams to id=0 and all audio streams to id=1</p><p id="ed03c254-3be8-4dea-8f83-f84b945a42e2" class="">
+</p><p id="0e235e61-5e7c-416b-944c-0664d131b0c7" class="">Adaptation Sets are a single “choice” or “selection” for a particular stream or output, with varying qualities such as bitrate and resolution, and the Dash client can Dynamically (Dynamic part of DASH) select future video segments to load based on hardware or software predicaments </p><p id="1cb48a25-b376-4c4c-a71b-84c25a9d8039" class="">
+</p><p id="430e98c7-7764-4bd6-9547-2682680b16b7" class="">So ultimately, for each fragment, the Dash Client will load from the network one stream in the Adaptation set.</p><h3 id="aea7e013-61c5-47e4-afd7-604ada2648e2" class="">Segment Timeline</h3><p id="231b2183-0392-4e2b-a2c8-e4d61fba9bf8" class="">For each stream, you an see a segment timeline that maps out the corresponding time intervals for each of the dash chunks in that stream.</p><p id="369b1fe9-d718-45ab-a963-91f00ec721b1" class="">You see for the video, there is simply r=14, which means repeated 14x more for the 60 second video (4 * (1+14)), checks out.</p><p id="3e9264ff-14b6-4d0a-be30-c2738bdfc228" class="">For the audio, you’ll see sizes that are about 4.5x the sampling frequency, I am fairly certain this is to prevent aliasing, and audio sizes are much lower than video, so its less intrusive for the user to have to load more.</p><p id="9a488a9f-2245-4a6f-88fe-f73b37d94699" class="">If you only have the “start” of a audio segment, you can end up with aliased high-pitched frequencies, but by “windowing” the output, by snipping out frequency information you can end up with high-pitched noises. </p><p id="5f7362dd-bfe2-4796-b274-bfaeb75d653c" class="">This is why you saw a Negative Start value in the earlier mp4 file we constructed from the mps audio.  At least, why I think so. </p><p id="427d4712-6b2f-4c7d-b95d-a3a7063dd58d" class="">
+</p><p id="f6a32900-330d-472c-8d5b-98960cd863a9" class="">
+</p><p id="8ab7005f-7361-48ca-a127-775777dc2335" class="">
+</p><p id="4bb3e5d3-cde1-474c-a046-8e8827c1bf54" class="">
+</p><p id="f760dc99-46d5-40ad-b6cf-581e97d9ed9a" class="">
+</p><p id="7411be53-5554-4829-a48f-3fa7c9bff847" class="">
+</p><p id="f592573e-2ba9-4eef-984a-11ccb9764a8c" class="">
+</p></div></article></body></html>
