@@ -1,0 +1,2 @@
+1. Unzip File
+2. Copy HTML To Folder/index.html

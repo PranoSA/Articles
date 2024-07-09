@@ -1,0 +1,726 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Brief Introduction To Digital Maps, and Maps That Explain How Our World Works</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-transparentGray { background-color: rgba(227, 226, 224, 0); }
+.select-value-color-translucentGray { background-color: rgba(0, 0, 0, 0.06); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="9f117f04-add1-4d90-bb73-65629f9cbdfc" class="page sans"><header><h1 class="page-title">Brief Introduction To Digital Maps, and Maps That Explain How Our World Works</h1><p class="page-description"></p></header><div class="page-body"><p id="c471e1a1-b96c-463d-b711-1c2c59efbed4" class="">
+</p><h2 id="793947a5-3178-41dd-9304-0728de402c78" class="">Overview of Digital Maps </h2><p id="d3f52503-a894-4a52-8f20-75bb9f836de8" class="">
+</p><h3 id="c22066d2-58e6-42aa-8e1b-8d35f31b5039" class="">Raster Image Format Maps</h3><p id="4a6b8106-0610-49c8-ba71-2603b32eede3" class="">You might be used to maps like this :</p><figure id="a30c4353-091c-4d4e-9bd7-4fd2e082c4f4" class="image"><a href="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled.avif"><img style="width:708px" src="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled.avif"/></a></figure><p id="bf78e854-6a6e-4fec-b743-0788557871b1" class="">Your browser will natively display common raster image formats [PNG, JPEG, etc.]. These contains raster [Pixelized Data] which essentially means there is a hard-coded grid of color information. This is regardless of the encoding or representation of the data - such as JPEGs encoding in YUV color coordinates and compressed using frequency coefficients for each JPEG block - its still a grid of pixel data the encoding is representing. </p><p id="847c49f3-2c98-4df8-bb49-26b578811d13" class="">None of the pixels themselves have any metadata or any associated tags. This means working with PNGs, JPEGs, and other rasterized image data to extrapolate features involves higher order steps and far more compute such as image recognition and Data Mining algorithms.  </p><p id="c6c73b2e-0ba0-4a39-808e-95562f78c3c1" class="">
+</p><h3 id="9bd5e1cf-3f2e-4dab-8c76-a33c21157753" class="">Vector Images</h3><p id="7e128f61-c3be-41cd-9565-58607811599f" class="">You might also run across vector image formats, such as SVG, especially for things such as ICONs</p><p id="2830bdec-746e-496d-a717-ad36d887f270" class="">
+</p><p id="d71e7c5c-5c20-416f-b818-b7761a751171" class="">These add flexibility and functionality such as interaction by Javascript with inline SVG files that can add manipulation such as shading, filling, transformations, or others. </p><p id="f807da8c-cda0-4da1-918f-9a8f175b1457" class="">
+</p><p id="a836118e-9c34-4a33-978f-d8a85b7d82b3" class="">This allows prescribing attributes to certain vector paths, and allowing you to do things like interactive zooming and clicking one browser / UI events. For example </p><p id="663de0c3-ee54-43cf-a5e0-3b99e9939dbf" class="">
+</p><figure id="12ecd596-6c42-49fa-9847-75483f426101"><div class="source"><a href="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Screen_Recording_2024-07-05_160434.mp4">Screen Recording 2024-07-05 160434.mp4</a></div></figure><p id="4d46bb3a-00d9-408d-b6ad-3118365764cf" class="">
+</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e7914649-55c8-4d72-8499-ee2ce54c1a30" class="code"><code class="language-JavaScript">//The code to get edit the HTML components upon clicking look like 
+const population = event.target.getAttribute(&#x27;data-population&#x27;);
+document.getElementById(&#x27;selectedCounty&#x27;).innerText = &#x27;Selected County ID: &#x27; + event.target.id + &quot;with population&quot; + population;</code></pre><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="4a8d95b9-f848-4036-a1cd-06980182bd21" class="code"><code class="language-JavaScript">//The code to build the bottom SVG looks like
+    const sideMapObject = document.getElementById(&#x27;SideMap&#x27;);
+    sideMapObject.innerHTML = &#x27;&#x27;; // Clear existing content
+
+    // Create a new SVG element
+    
+    //Base SVG E
+    const newSVG = document.createElementNS(&#x27;http://www.w3.org/2000/svg&#x27;, &#x27;svg&#x27;);
+    newSVG.setAttribute(&#x27;width&#x27;, &#x27;100%&#x27;);
+    newSVG.setAttribute(&#x27;height&#x27;, &#x27;100%&#x27;);
+    newSVG.setAttribute(&#x27;viewBox&#x27;, event.target.getBBox().x + &#x27; &#x27; + event.target.getBBox().y + &#x27; &#x27; + event.target.getBBox().width + &#x27; &#x27; + event.target.getBBox().height);
+
+    // Clone the polyline and append it to the new SVG
+    const clonedPolyline = event.target.cloneNode(true);
+    newSVG.appendChild(clonedPolyline);
+
+    // Append the new SVG to the SideMap
+    sideMapObject.appendChild(newSVG);</code></pre><p id="8cd05c25-f977-4e51-b6bf-daba75abf78b" class="">Point is, because of the vector / coordinate makeup of SVGs allow for native javascript interaction as a native DOM element that can access Polyline, Polygon, and other shape’s metadata inside of a SVG file. </p><p id="e6590549-412a-4107-8eca-cfc3c49639fa" class="">SVGs also allow variable resolution at zoom - so SVGs are better than rasterized images at holding high resolution data.  Rendering vector images involves transforming vectors at a certain zoom, alongside fill information, etc. to essentially raster data to the framebuffers and graphical hardware to display on your screen, just like rasterized images. </p><p id="5fd639ef-a53e-46aa-b738-aa0d33b4bf71" class="">
+</p><p id="ec7dfa8d-0732-42e3-a233-ae72f402e2dd" class="">But Digital Maps allow richer Layering, Display, filtering, information requesting and response protocols, and calculations on data than SVG images alone can. </p><p id="6491b2f1-d024-4190-a000-6e006b1dd1d5" class="">
+</p><h3 id="f55eb330-54b2-42e9-ab3a-9f741bd1031d" class="">Digital Maps UIs</h3><p id="a316540d-22f9-4d42-92f3-178b466c7051" class="">Digital Map UIs and builders come in many forms such as ArcGis, QGis, other geospatial software, WEB UI APIs such as OpenLayers, and others.</p><p id="13493b3f-3086-47a8-858c-0370c24f19d4" class="">Digital Maps allow to you to build “Layers” composed on top of each other, and can interact with a variety of data sources, such as KML, GeoJSON, Shapefiles, GeoPackages, and some other propietary and open standard formats. </p><p id="88115e32-21b2-4235-9e9e-071b36d0d2f2" class="">Some standardized protocols such as WMS, WCS, and WFS provide a standardization for requests to a GeoServer for different formats of data. </p><p id="00c13ae7-2bda-4f20-888d-f20f47905e47" class="">
+</p><p id="79ae4424-3e44-4da6-a1b1-af67fec58f58" class="">On the client side, usually digital maps have powerful tools for displays, such as Heat Maps, Filtering, Clustering, Symbols, etc. </p><p id="7dad0afe-c258-4610-af4c-a03673343d8d" class="">
+</p><p id="3b012a1c-63c1-4859-81f1-178818855242" class="">An Example of Clustering</p><figure id="c64bdc9f-fcc5-44d9-8a30-7152bc5eb550"><div class="source"><a href="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Screen_Recording_2024-07-07_180613.mp4">Screen Recording 2024-07-07 180613.mp4</a></div></figure><p id="01539c4e-4550-4995-bbb9-884e2f1923dd" class="">An Example of Heat Maps </p><p id="5cf5cb4f-3da3-4171-9d72-2abe85dc9ff9" class="">
+</p><p id="480bf9da-e52b-492a-b1ec-ea3c1ba2ad43" class="">In this example, Clustering groups together power plants nearby when zoomed out, and breaks clusters apart when zoomed in.</p><p id="cb2fc697-82e7-4a14-9998-ae34be1f1071" class="">The heat map demonstrates the density of the existence of power plants across the map. </p><p id="1009afba-7610-4279-bfd3-e851f37d0337" class="">
+</p><h2 id="3c73aa4d-555f-4fd2-ab7d-5dc57c87d63e" class="">General Types Of Data Digital Maps Process</h2><p id="cf1aff98-06a0-4bde-bbdb-88395a2c27a8" class="">
+</p><p id="d5d9a579-159a-4ad6-bcfa-08e1995307cf" class="">Each piece of Data Will Comprise of a “Layer” on the map. A layer is an abstraction that allows behavior to apply to it - such as how its displayed on the map and how it is requested and filtered. </p><h3 id="f3e59e9a-2437-40f1-9697-5ceb41677839" class="">Raster Data (Images)</h3><p id="45a74cd7-c750-477c-b043-8436a2ba6212" class="">Raster Data is Map Data displayed as pixels on the screen, and often do not have any functionality despite being the background / reference image for the overlayed maps. </p><h3 id="1c0ad580-2958-4a74-a063-3f6990766975" class="">Tiled Raster Maps</h3><p id="cbeb473f-a285-454c-a79a-636f22c7bee8" class="">Allows the client to request partitions of the map to decrease the amount of requests to the server. This allows lower network data transfers. </p><p id="d646300f-09f4-4808-b618-59f1fc9ee1c3" class="">For example:</p><p id="61662f55-d1da-4f4f-abde-86a188b75e10" class=""><a href="https://tile.openstreetmap.org/4/15/4.png">https://tile.openstreetmap.org/4/15/4.png</a> </p><p id="8cd6174d-8682-40b5-b7e2-55ce8900675c" class="">Zoom Level 4, Tile Coordinates [15,4]</p><h3 id="d1966127-eb08-42f5-9091-bd00acaa48fb" class="">Vector Data</h3><p id="2cce2298-2c70-4c9d-9f2e-2c4d283c8ef8" class="">Vector Data is different than raster data because it isn’t just an image to display, but information about the components of the map’s information gets passed to the client, which then chooses how to render it. This allows different types of displays such as elevation maps, heat maps, clustering, etc. </p><p id="1f2170af-d187-4637-9a4d-927be959817d" class="">Vector Data includes geometries such as Points, Polygons, MultiPolygons, Lines, etc. </p><h3 id="15adda5e-a65c-4969-8c7f-831a1a6cba26" class="">Tiled Vector Data</h3><p id="163db755-6f7a-4998-99b1-57f00f98a706" class="">Similar to Tiled Raster Data, allows filtering in the client request (on the server side). </p><p id="a300a3e9-f822-442d-8781-2f383066a51f" class="">
+</p><p id="1d9a9e95-938f-46e4-841a-1a32e2480773" class="">
+</p><h2 id="69f822a1-533a-4c99-b567-048960f94371" class="">Exact Types</h2><p id="e97fcefd-2a7b-4e2b-a974-a66b8dcdbbef" class="">In the above section, I explained generally that raster or vector types exist for displaying on maps. However, these can come in different formats.</p><h3 id="2c4c280f-5c2b-47ca-9a9a-698b5bd4056e" class="">Vector Types</h3><ol type="1" id="ff8eacef-14e3-4253-88ca-ee3284177144" class="numbered-list" start="1"><li>KML</li></ol><ol type="1" id="38f2954f-c70f-43b3-8eec-0dcefa3dc49a" class="numbered-list" start="2"><li>GeoJSON</li></ol><ol type="1" id="acf76dfd-7bae-471d-8a60-63d20e9f7ab0" class="numbered-list" start="3"><li>Shapefiles</li></ol><ol type="1" id="4d7dce01-149a-4ed5-a48b-a4d5d4410ffe" class="numbered-list" start="4"><li>GeoPackages </li></ol><ol type="1" id="4f9d3f3e-e951-47b1-bd26-9e945e67b2ed" class="numbered-list" start="5"><li></li></ol><p id="42723fd5-e08c-4465-a210-9c4cb22f5d6f" class="">
+</p><h3 id="fe990762-67f1-49c4-bc3f-2e19aa0ca40d" class="">Raster Options</h3><ol type="1" id="10b3da84-5536-48cb-9588-6f7792fbecca" class="numbered-list" start="1"><li>KML</li></ol><ol type="1" id="00924540-6cca-4461-a834-7c7e81a2ac71" class="numbered-list" start="2"><li>GeoPackages</li></ol><ol type="1" id="4969242a-2500-4768-9111-343fa57d7b1c" class="numbered-list" start="3"><li>GeoTIFF</li></ol><ol type="1" id="f4074c83-3bb2-4d8e-9744-9d5cdecce32f" class="numbered-list" start="4"><li>Image Formats [JPEG, PNG, etc.] </li></ol><ol type="1" id="11b9847c-848a-450d-8c3e-77924853700b" class="numbered-list" start="5"><li></li></ol><h1 id="b67f8267-5e77-4ffc-9c86-de34485e827a" class="">Back To Infrastructure</h1><h2 id="1c72b1b5-1191-4094-9c13-6d98bd24b66d" class="">Electrical </h2><p id="5ccb00f9-f552-4bca-9798-69b78751a49e" class="">Where does electrical power get generated and where does it attach to the grid?</p><p id="2f26510f-6bb2-4833-96e9-717703331178" class="">What kind of electrical power sources exist at certain locations?</p><p id="653977fa-c34e-49af-9d81-4f8aafcc0738" class="">Where are transmission lines for long distance electricity hauling? </p><p id="ed820dc1-cda7-4246-8494-9fa3bb44ad21" class="">
+</p><h2 id="4cc64c1f-b062-4973-ab32-a22561e5c981" class=""></h2><h3 id="38566e00-9489-4875-a25f-f1eccdcefa99" class="">Power Plants</h3><p id="65380f28-70d3-47ea-a9c4-84c2f51fa97f" class=""><a href="https://www.arcgis.com/apps/mapviewer/index.html?webmap=b1f22fb7ce9242ed9c6800f970a34e84">https://www.arcgis.com/apps/mapviewer/index.html?webmap=b1f22fb7ce9242ed9c6800f970a34e84</a> </p><h3 id="a9ea9699-888b-46ca-9446-244f9c3c7853" class="">Transmission Lines Map</h3><p id="2c4bb40d-2742-4857-a772-5c6dfc5ba486" class=""><a href="https://hub.arcgis.com/datasets/d4090758322c4d32a4cd002ffaa0aa12/explore">https://hub.arcgis.com/datasets/d4090758322c4d32a4cd002ffaa0aa12/explore</a> </p><p id="00020c95-ccf8-4d38-b295-e20b33b84292" class="">Zoom in to a location to see the transmission lines, you can find substations where transmission lines end. </p><h3 id="68105367-3006-41cc-a055-b10243983ca7" class="">Filtered Transmission Lines </h3><figure id="27938639-aff1-40a7-88c0-edc689a2ebba" class="image"><a href="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled.png"><img style="width:708px" src="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled.png"/></a></figure><p id="958ddfed-9ffb-41a5-b684-6454ebc9c6eb" class="">
+</p><p id="c49d3af7-f894-4026-bba5-598de73c644c" class=""><a href="http://localhost:3000/api/geoserver/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=ne:Electric_Power_Transmission_Lines_A&amp;outputFormat=application/json&amp;CQL_FILTER=VOLTAGE">http://localhost:3000/api/geoserver/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=ne:Electric_Power_Transmission_Lines_A&amp;outputFormat=application/json&amp;CQL_FILTER=VOLTAGE</a>&gt;700 </p><p id="dd2c9a47-0864-4a62-92c6-4b1655012a4e" class="">
+</p><figure id="df42f2e6-d1c1-46c6-8643-69a2bdf5eda7" class="image"><a href="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled%201.png"><img style="width:708px" src="Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Untitled%201.png"/></a></figure><p id="86feb054-c1d0-4961-840f-7d5a2150a9ca" class=""><a href="http://localhost:3000/api/geoserver/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=ne:Electric_Power_Transmission_Lines_A&amp;outputFormat=application/json&amp;CQL_FILTER=VOLTAGE%3E200%20AND%20BBOX(the_geom%2C-13613498.245478805%2C3685997.943791308%2C-12476549.548982162%2C4283134.864220217)">http://localhost:3000/api/geoserver/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=ne:Electric_Power_Transmission_Lines_A&amp;outputFormat=application/json&amp;CQL_FILTER=VOLTAGE&gt;200 AND BBOX(the_geom%2C-13613498.245478805%2C3685997.943791308%2C-12476549.548982162%2C4283134.864220217)</a> </p><p id="8a7cd9e6-3c04-4262-9243-2ad72d6fba37" class="">
+</p><h2 id="19850a77-82dd-480e-9ae9-707746898d7b" class="">Shipping </h2><p id="790f12dc-67d6-4825-88f5-e063fb984806" class="">
+</p><h3 id="a96aba64-24b2-4489-aa90-8f6ffb0dba41" class="">Freight </h3><p id="0552208b-f99e-4d3b-9027-cc3b3796dd14" class=""><a href="https://www.acwr.com/economic-development/rail-maps/union-pacific">https://www.acwr.com/economic-development/rail-maps/union-pacific</a></p><h3 id="2a433146-6028-43af-a922-5d226de1821b" class="">International Shipping Routes</h3><p id="56b982f4-c38d-4771-87a2-8bf224d9850e" class=""><a href="https://www.arcgis.com/home/webmap/viewer.html?webmap=940902bb15fc449c9ff840dd622cc42c">https://www.arcgis.com/home/webmap/viewer.html?webmap=940902bb15fc449c9ff840dd622cc42c</a> </p><p id="88006e38-aba7-4c39-93d5-7bef669f37b1" class="">
+</p><h3 id="a523fcf3-2931-48cf-a4de-5e721afcc15d" class="">International Ports</h3><p id="8d8a78f3-7d07-494e-ab13-9a91e7986dd8" class=""><a href="https://hub.arcgis.com/datasets/1e7dfd86350e4e00b722b943a02cb14c/explore?location=26.041139%2C-97.503875%2C2.95">https://hub.arcgis.com/datasets/1e7dfd86350e4e00b722b943a02cb14c/explore</a></p><p id="eeb5a7eb-7f9e-4a93-905f-f463fa49cd43" class="">
+</p><h2 id="697718ef-70f8-4747-94bf-973567d50529" class="">Plumbing </h2><p id="db2e00ae-a7bc-4e7c-9e01-783b4c7e010f" class="">
+</p><p id="cfda8ced-a98f-4fb4-9858-05becff927bd" class="">
+</p><h2 id="9e293453-912d-4cb8-b46e-ed932c78bff8" class="">Internet </h2><p id="6fe556a4-281d-42a2-8afb-7fd432175950" class="">Internal details of a lot the internet are both propietary and largely too complicated to be displayed as geographic maps, but you can see a lot of the most major and high volume infrastructure that makes up the global internet.</p><p id="69e33752-ec20-4985-85a9-2857d81b1c90" class="">Thinks like private peering agreements between two Autonomous Systems, internal Internet Exchange Point agreements (IXPs), which part of the address  </p><p id="7471f465-e013-4e80-9903-5597897245e2" class="">
+</p><h3 id="4113c88a-c522-42fc-b05f-36590a582845" class="">Underwater Sea Cables</h3><p id="47bff1ed-3cd1-46aa-ad9f-4bf140be90b7" class="">Underwater Sea Cables are low in volume , high capacity, connections across the ocean that allows the internet to operate globally.</p><p id="0e47ed5d-85ad-4ea8-a6a8-b8606a17c9cc" class=""><a href="https://www.submarinecablemap.com/">https://www.submarinecablemap.com/</a> </p><p id="35f69702-ebe0-4ade-965c-74faedae29a8" class="">
+</p><h3 id="e64bdaaa-c261-4d14-b968-c196e86c52bd" class="">IXPs (Internet Exchange Points)</h3><p id="415805c7-1956-439d-9201-0fd5014e4e16" class="">IXPs are one of two ways for different Networks to peer with each other and exchange routing information for the global internet using the BGP protocol. This is contrary to “Private Peering Links”. </p><p id="eb83f847-7818-4627-9754-b081d9e08410" class=""><a href="https://www.internetexchangemap.com/#/building/19230">https://www.internetexchangemap.com/#/building/19230</a> </p><h3 id="9113ee50-e01a-4f42-9656-b42b0a3f9507" class=""></h3><p id="4bee192e-08b1-47db-8bf8-6fb0bcec8d20" class="">
+</p><h3 id="bdaecbbc-5e19-4f11-ba5d-5c0e6b143cc2" class="">AWS Data Center Locations</h3><p id="05066109-6998-4dd6-85ec-d6bbb49fed11" class="">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
