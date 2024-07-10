@@ -1,2 +1,6 @@
 1. Unzip File
 2. Copy HTML To Folder/index.html
+
+
+file://///wsl.localhost/Ubuntu/home/pranosaurus/projects/Articles/Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Screen_Recording_2024-07-05_160434.mp4
+file://///wsl.localhost/Ubuntu/home/pranosaurus/projects/Articles/Digital_Maps/Brief%20Introduction%20To%20Digital%20Maps,%20and%20Maps%20That%20%209f117f04add14d90bb7365629f9cbdfc/Screen_Recording_2024-07-05_160434.mp4
