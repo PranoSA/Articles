@@ -1,0 +1,894 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Inspecting DNS-SEC and Reverse DNS on Docker &amp; Bind9 [Part 2] - Running Nameservers and Adding DNS-SEC Records</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-transparentGray { background-color: rgba(227, 226, 224, 0); }
+.select-value-color-translucentGray { background-color: rgba(0, 0, 0, 0.06); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="390e7ede-cb48-415f-949a-65048207bbb4" class="page sans"><header><h1 class="page-title">Inspecting DNS-SEC and Reverse DNS on Docker &amp; Bind9 [Part 2] - Running Nameservers and Adding DNS-SEC Records</h1><p class="page-description"></p></header><div class="page-body"><p id="bf6fdad5-9631-4a3b-b325-2be5fa6a534b" class="">
+</p><p id="a4d86f93-3d23-412e-bfbe-d4d0c6591847" class="">
+</p><h2 id="449dce4c-b440-4d58-b783-912fbebd9de0" class="">Pre-Clean</h2><p id="b665138a-b2a6-47af-a224-21ede1768265" class="">If you want to restart the article, run these commands</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="54c22794-7ad9-4c70-b302-edb85f61a554" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">docker network rm dns_network
+docker stop dns_client
+docker stop dns_child_server
+docker stop dns_child_server
+docker rm dns_client
+docker rm dns_child_server
+docker rm dns_parent_server
+</code></pre><h2 id="674aa882-149d-4127-bae4-b6952759ae5f" class="">Network and IP Ranges</h2><p id="b470f1b9-4eba-43d3-9963-e12c17b719bc" class="">Here we will set up the IP Address for The Docker Bridge Network.</p><p id="2d56faf4-c73f-42aa-bd9d-b5d4be779785" class="">Network / CIDR</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="fc85ad7f-32e3-445b-98dd-fd586c232ad4" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">docker network create --driver bridge dns_network --subnet=172.25.0.0/16
+</code></pre><p id="185ff1dd-9c89-4b70-a93b-e39956d89c43" class="">For The Agents Running Inside of the Network, They will be allocated IP Addresses:</p><ul id="9da5f336-d2f3-4fb1-8d03-af34f58334e9" class="bulleted-list"><li style="list-style-type:disc">Parent Nameserver → 172.25.0.2</li></ul><ul id="c3c151b0-ae96-48e9-bf6c-444e00b80415" class="bulleted-list"><li style="list-style-type:disc">Child Nameserver → 172.25.0.3</li></ul><ul id="57d07d58-e73f-4c38-b182-54def188beda" class="bulleted-list"><li style="list-style-type:disc">Dig Tester → 172.25.0.5</li></ul><h2 id="0b363e7b-6f9a-4597-970b-5b9711b26bca" class="">Grabbing the Dockerfiles From Git</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="bd8b0a2e-1a8d-43ac-998e-31a1856a3032" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">git clone git@github.com:PranoSA/Docker_DnsSec-ReverseDNS.git
+cd Docker_DnsSec-ReverseDNS/
+</code></pre><h2 id="cff63148-c2fd-4ed0-9108-6be6d5f86456" class="">Setting up DNS Client Test</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="808b3ee3-3e03-496c-9261-68678f7bac96" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">docker run -it -d --network dns_network --ip 172.25.0.5 --name dns_client sequenceiq/alpine-dig /bin/sh
+
+</code></pre><h2 id="1241cfc0-ec74-4fac-8a6b-a2d1f265b7fc" class="">Zonefiles [Review] And Record Types in DNS</h2><h2 id="95e8b0cd-ce9f-4766-8718-b846e0b03f81" class="">Setting up DNS Parent Zone</h2><p id="1b619c33-1fa6-4a91-8ed4-4bb841422e50" class="">The Parent zone Is Responsible for the [.com] TLD inside the Network and DNS resolution for the [192.168.0.0/16 IPv4 Range]</p><h3 id="6d762699-b74b-47fa-9b5c-8eec4b2f885f" class="">[.com]</h3><p id="cc4f8c62-cadf-44d0-bb02-c8b36e8caba9" class="">The [.com] TLD Zone File Looks Like (Before DNS-SEC)</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="5e8c86ac-9ac6-4ed1-93e7-aa5a180ca448" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">@       IN      SOA     com   ns1.com (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+@                   IN        NS      ns1.com.
+ns1               IN        A       172.25.0.2
+
+marley              IN        A       172.25.0.11
+
+compressibleflowcalculator.com.       IN      NS      ns1.compressibleflowcalculator.com.
+ns1.compressibleflowcalculator.com.       IN     A      172.25.0.3
+</code></pre><p id="c79502fa-3cc3-43d8-a488-4ee9e70d02fa" class=""><a href="https://github.com/PranoSA/Docker_DnsSec-ReverseDNS/blob/main/volumes/dns1/db.com">https://github.com/PranoSA/Docker_DnsSec-ReverseDNS/blob/main/volumes/dns1/db.com</a></p><h3 id="58d60afd-99f1-4e28-9d38-c66cf0688b41" class=""><a href="http://25.172.in-addr.arpa">25.172.in-addr.arpa</a> Zone File</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="a9c676d3-ce4f-4bef-915e-afbc8f020e17" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">@       IN      SOA     168.192.in-addr.arpa.   root.168.192.in-addr.arpa (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+@       IN          NS        root.25.172.in-addr.arpa.
+root    IN          A         17.25.0.2
+
+0.25.172.in-addr.arpa.     IN              NS          ns1.compressibleflowcalculator.com.
+ns1.compressibleflowcalculator.com.       IN     A      172.25.0.3
+</code></pre><p id="fcc1c6d8-d222-4c8d-90c2-55d2722c711d" class="">Building Docker for DNS Parent Zone</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="8c6274eb-858a-4aee-8c14-fff9d6547ed1" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">docker build . -f dns_parent_server/Dockerfile -t dns_parent_server
+</code></pre><h2 id="3e73605a-b6a6-4597-ae03-328638447314" class="">Setting up DNS Child Zone</h2><h3 id="968bbf88-84bf-40e3-a0b3-c10bd24f05ee" class="">[<a href="http://compressibleflowcalculator.com/">compressibleflowcalculator.com</a>]</h3><p id="f257cefb-7aca-49be-917d-de13d99ddf7f" class="">The c<a href="http://compressibleflowcalculator.com/">ompressibleflowcalculator.com</a> Zone File Looks  Like</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="64e68dde-05c5-4f99-ae63-0a6f13b7b1ce" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">@       IN      SOA     compressibleflowcalculator.com   ns1.compressibleflowcalculator.com. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+
+@           IN      NS    ns1.compressibleflowcalculator.com.
+ns1         IN      A      172.25.0.3
+
+
+
+ldap        IN      A       192.168.25.7
+www         IN      A      192.168.25.10 
+
+k5          IN      A      192.168.25.11
+home        IN      CNAME       ldap.compressibleflowcalculator.com.
+
+
+
+</code></pre><h3 id="a581d9ca-2756-49a8-bd72-8deb92c21eb8" class="">0.25.172.in-addr.arpa</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="820eff5a-6709-4e1c-9f88-6314c6670d26" class="code"><code class="language-Shell" style="white-space:pre-wrap;word-break:break-all">@       IN      SOA     0.25.172.in-addr.arpa.   root.0.25.172.in-addr.arpa. (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+@       IN          NS        ns1.0.25.172.in-addr.arpa.
+ns1     IN          A         17.25.0.3
+
+2.0.25.172.in-addr.arpa.    IN         PTR         com.
+3.0.25.172.in-addr.arpa.   IN          PTR         compressibleflowcalculator.com.
+7.0.25.172.in-addr.arpa.   IN          PTR         ldap.compressibleflowcalculator.com.
+</code></pre><h2 id="e8df4f53-72f8-4693-8dd5-91e7bf5f0e25" class="">Building Docker Images</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="44fe21a4-571a-4d7b-bfc1-19270e96aec0" class="code"><code class="language-JavaScript">
+# Build Parent Zone
+docker build . -f dns_parent_server/Dockerfile -t dns_parent_server 
+docker build . -f dns_child_server/Dockerfile -t dns_child_server</code></pre><h2 id="d6568c47-c7fc-4ebd-ab6b-304a57311d91" class="">Running All The Docker Containers and Starting The Client</h2><p id="fe16bf86-91b6-4701-be17-e3c9639a62c7" class="">
+</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="031655f8-203f-4e44-8722-feed7ff89998" class="code"><code class="language-JavaScript">
+
+docker run -d --network dns_network --ip 172.25.0.3 --name dns_child_server dns_child_server
+docker run -d --network dns_network --ip 172.25.0.2 --name dns_parent_server dns_parent_server
+docker run -it -d --network dns_network --ip 172.25.0.5 --name dns_client sequenceiq/alpine-dig /bin/sh
+docker exec -it dns_client /bin/sh</code></pre><h2 id="c209ce11-8522-4de8-aeee-60abe37b30a9" class="">Fixing the DNS record with the “DS Record”</h2><p id="730c388d-1bd5-4a03-8ad4-33ea562c08b3" class="">
+</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="6267265e-9d63-46af-8431-f7e6a6fa5caf" class="code"><code class="language-JavaScript">
+docker run -d --network dns_network --ip 172.25.0.3 --name dns_child_server dns_child_server
+docker run -d --network dns_network --ip 172.25.0.2 --name dns_parent_server dns_parent_server
+docker run -it -d --network dns_network --ip 172.25.0.5 --name dns_client sequenceiq/alpine-dig /bin/sh</code></pre><p id="f0c97d27-8a46-4b50-a27b-3f12ca1edcd7" class="">
+</p><h2 id="cbb26ee3-9e11-4665-a100-0d1bcd1a06ae" class="">Running queries</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="eda02299-7db4-40ab-b624-cc417eb395c5" class="code"><code class="language-JavaScript">#We can Run queries inside of the docker network by running
+docker exec -it dns_client /bin/sh
+dig @172.25.0.2 www.compressibleflowcalculator.com +dnssec +qr
+
+; &lt;&lt;&gt;&gt; DiG 9.10.2 &lt;&lt;&gt;&gt; @172.25.0.2 www.compressibleflowcalculator.com +dnssec +qr
+; (1 server found)
+;; global options: +cmd
+;; Sending:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 22212
+;; flags: rd ad; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 4096
+;; QUESTION SECTION:
+;www.compressibleflowcalculator.com. IN A
+
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 22212
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;www.compressibleflowcalculator.com. IN A
+
+;; ANSWER SECTION:
+www.compressibleflowcalculator.com. 604486 IN A 192.168.25.10
+www.compressibleflowcalculator.com. 604486 IN RRSIG A 8 3 604800 20240813223250 20240723021726 36793 compressibleflowcalculator.com. 04EM9Twd69QaYIsFVHpLVzO4zr5NBQg7sB/frB5zvp2AsXgC0I1NsaIA RZ4ieW3TmDz7OhpDcyUNwIvCZYQXK/c4tN4Uo81H4uIbeUEtE8Qdue1f N+C4pnCgszYkxYAAUBJKlgbeTOLlkOuABhEPVawkPI382ukRbnkYGEYI 6h0=
+
+;; Query time: 1 msec
+;; SERVER: 172.25.0.2#53(172.25.0.2)
+;; WHEN: Tue Jul 23 03:22:54 UTC 2024
+;; MSG SIZE  rcvd: 269
+
+# You can also run by connecting directly to the child nameserver 
+</code></pre><h2 id="e7842841-fe5a-48a6-9d6a-b361abacd926" class="">DNS-SEC  Query Experiment [ad flag verification] </h2><p id="f78955a9-9a19-4c75-bb6d-8b7e897a1bb5" class="">Rebuild the Container and run the query again</p><ol type="1" id="140dac3d-46a8-4db0-8cab-a88682c266af" class="numbered-list" start="1"><li>You’ll need to find the printed out DS record for the parent nameserver</li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="6309ee59-9bdb-4480-af42-39ea8392b93a" class="code"><code class="language-JavaScript">docker build . -f dns_child_server/Dockerfile -t dns_child_server
+failed to fetch metadata: fork/exec /usr/local/lib/docker/cli-plugins/docker-buildx: no such file or directory
+
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  156.2kB
+Step 1/18 : FROM ubuntu/bind9 as starter
+ ---&gt; 45aca018a72a
+Step 2/18 : COPY dns_child_server/append_zones.sh .
+ ---&gt; Using cache
+ ---&gt; 99487c5ed051
+Step 3/18 : RUN chmod +x ./append_zones.sh
+ ---&gt; Using cache
+ ---&gt; 691eea97ec4a
+Step 4/18 : RUN ./append_zones.sh
+ ---&gt; Using cache
+ ---&gt; 08669d186572
+Step 5/18 : COPY volumes/dns2/db.compressibleflowcalculator.com /etc/bind/db.compressibleflowcalculator.com
+ ---&gt; Using cache
+ ---&gt; 107246a24347
+Step 6/18 : COPY dns_child_server/add_dns_options.sh .
+ ---&gt; Using cache
+ ---&gt; 8cbe53d7f1cc
+Step 7/18 : RUN chmod +x ./add_dns_options.sh
+ ---&gt; Using cache
+ ---&gt; b193ff94cc3e
+Step 8/18 : RUN ./add_dns_options.sh
+ ---&gt; Using cache
+ ---&gt; 4f4a86b4b26d
+Step 9/18 : COPY volumes/dns2/db.0.25.172.in-addr.arpa /etc/bind/db.0.25.172.in-addr.arpa
+ ---&gt; Using cache
+ ---&gt; d098befe5b61
+Step 10/18 : WORKDIR /etc/bind/keys/compressibleflowcalculator.com
+ ---&gt; Using cache
+ ---&gt; 89952f6e7a15
+Step 11/18 : RUN dnssec-keygen -a RSASHA256 -b 2048 -f KSK compressibleflowcalculator.com &amp;&amp;     for key in Kcompressibleflowcalculator.com.+008+*.key; do     dnssec-dsfromkey -a SHA-256 &quot;$key&quot; &gt; &quot;${key}.ds&quot;;     cat &quot;${key}.ds&quot;;     done
+ ---&gt; Running in bec5611ecacf
+Kcompressibleflowcalculator.com.+008+46129
+compressibleflowcalculator.com. IN DS 46129 8 2 C685036ECC7B3F1EE0CE33988EF736E7F39FAE1BC5A6FE7E5DF70D5A13F1220C
+Removing intermediate container bec5611ecacf
+ ---&gt; 014f4199ee7e</code></pre><p id="9bf1e573-9b9b-496e-8a70-a8e0eac83bc2" class="">Here it is after step 11:</p><p id="844380b6-3d30-4558-a183-cbed92600370" class="">
+</p><p id="641cf4a3-06d6-40ec-adcb-45dee56d9077" class="">
+</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="43777fee-8f30-487e-bff3-e9be5db112ff" class="code"><code class="language-JavaScript">compressibleflowcalculator.com. IN DS 46129 8 2 C685036ECC7B3F1EE0CE33988EF736E7F39FAE1BC5A6FE7E5DF70D5A13F1220C</code></pre><p id="fb8fff36-8a5e-4ccd-bb0c-37e251e66832" class="">Now Insert this in the .com nameserver</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="1b10e608-b302-432a-a774-0c7f5f9e9347" class="code"><code class="language-JavaScript">@       IN      SOA     com   ns1.com (
+                              1         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+
+
+@                   IN        NS      ns1.com.
+ns1               IN        A       172.25.0.2
+
+marley              IN        A       172.25.0.11
+
+compressibleflowcalculator.com.       IN      NS      ns1.compressibleflowcalculator.com.
+ns1.compressibleflowcalculator.com.       IN     A      172.25.0.3
+
+;compressibleflowcalculator.com. IN DS 50762 8 2 555A450D6A9A3E6B73DFBC4029F371CEDB8549D5CEACC71ED36C358484627F48
+compressibleflowcalculator.com. IN DS 46129 8 2 C685036ECC7B3F1EE0CE33988EF736E7F39FAE1BC5A6FE7E5DF70D5A13F1220C
+</code></pre><p id="69130897-d3f1-4ef3-afa0-43edfc26b74d" class="">
+</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="26561140-7c96-429b-a3ff-b241715ed457" class="code"><code class="language-JavaScript"># dig @172.25.0.2 ns1.compressibleflowcalculator.com NS +dnssec
+
+; &lt;&lt;&gt;&gt; DiG 9.10.2 &lt;&lt;&gt;&gt; @172.25.0.2 ns1.compressibleflowcalculator.com NS +dnssec
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 1515
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 0, AUTHORITY: 4, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags: do; udp: 1232
+;; QUESTION SECTION:
+;ns1.compressibleflowcalculator.com. IN NS
+
+;; AUTHORITY SECTION:
+ns1.compressibleflowcalculator.com. 10800 IN RRSIG NSEC 8 3 604800 20240805015626 20240723023517 41886 compressibleflowcalculator.com. eDvbZXZMh+5eE1I1uEfuSszouNXSEkR4hSSQ1irBXhFrQ6/AGNPbmz9L 8KlZdZp46xiSayWfEVef2/dbaFamD5v19jCRwjLt72os0Qlo9W1ItDPm gP+NRMLG5qdjO+Uo+K8AP/TXFqrMzZG1Nfmq0Lu+68ZvnIMd7VgFC0vG wJg=
+ns1.compressibleflowcalculator.com. 10800 IN NSEC www.compressibleflowcalculator.com. A RRSIG NSEC
+compressibleflowcalculator.com. 10800 IN SOA    compressibleflowcalculator.com.compressibleflowcalculator.com. ns1.compressibleflowcalculator.com. 4 604800 86400 2419200 604800
+compressibleflowcalculator.com. 10800 IN RRSIG  SOA 8 2 604800 20240822033517 20240723023517 41886 compressibleflowcalculator.com. bddEHe96kTCyCa+JZNncGWJx19Vi702aMCGDYUs+6OY3iiA0sq8KrSvT 3WEAudAXSg/80yKW5uXms0tgT1kMTxN2/NS6PdKjZ1l89ymdU6H2jHdE KB2bqmSFZ5vUJiwWCBZCK1mB+QRk5AzYkLOZ3vU3Ak/gCm+7WKfJO7+z Iik=
+
+;; Query time: 4 msec
+;; SERVER: 172.25.0.2#53(172.25.0.2)
+;; WHEN: Tue Jul 23 03:35:28 UTC 2024
+;; MSG SIZE  rcvd: 596</code></pre><p id="bb25ca5e-9513-49da-a56d-1c8893053671" class="">You can now see the “ad” flag - or authenticated data</p><p id="b19c63ad-604f-4e8f-aa45-035d75600093" class="">
+</p><p id="4c84867a-b25e-43db-8f39-0793bc118d6c" class="">Now Lets record what some of these requests look like </p><figure id="eb68c9af-a832-4f0b-a6b5-aa11dda841ae"><div class="source"><a href="Inspecting%20DNS-SEC%20and%20Reverse%20DNS%20on%20Docker%20&amp;%20Bin%20390e7edecb48415f949a65048207bbb4/dnssec_compressible_flows_trimmed.pcap">dnssec_compressible_flows_trimmed.pcap</a></div></figure><figure id="456a67f0-2050-46d4-bfa1-51a048add316" class="image"><a href="Inspecting%20DNS-SEC%20and%20Reverse%20DNS%20on%20Docker%20&amp;%20Bin%20390e7edecb48415f949a65048207bbb4/Untitled.png"><img style="width:708px" src="Inspecting%20DNS-SEC%20and%20Reverse%20DNS%20on%20Docker%20&amp;%20Bin%20390e7edecb48415f949a65048207bbb4/Untitled.png"/></a></figure><figure id="5d629466-e1ad-45d7-8e3b-583682201291"><div class="source"><a href="Inspecting%20DNS-SEC%20and%20Reverse%20DNS%20on%20Docker%20&amp;%20Bin%20390e7edecb48415f949a65048207bbb4/dnssec_compressible_flows-3_trimmed.pcap">dnssec_compressible_flows-3_trimmed.pcap</a></div></figure><p id="6ed6a50b-4b77-4111-b0bb-1f524f91f31d" class="">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
