@@ -1,0 +1,1009 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Timestamps on the wire, in memory, and in Working with Timestamps in Postgres</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-transparentGray { background-color: rgba(227, 226, 224, 0); }
+.select-value-color-translucentGray { background-color: rgba(0, 0, 0, 0.06); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="39e8704c-f12e-4624-9544-82700dd67087" class="page sans"><header><h1 class="page-title">Timestamps on the wire, in memory, and in Working with Timestamps in Postgres</h1><p class="page-description"></p></header><div class="page-body"><figure id="8b5a14f5-8e67-4b7b-aec8-8f82c8c44799"><div class="source">https://github.com/PranoSA/Timestamp_Samples</div></figure><p id="de26aea6-f2fb-4f94-9e64-ce48c97a37b7" class="">In this article there are 4 main things I want to discuss about timestamps </p><ol type="1" id="05302d39-812b-45be-b720-bb1133f86c6d" class="numbered-list" start="1"><li>Different Languages and the timestamp types they have - is it part of the standard library, part of the language, what is its underlying format? (C#, Java, Python, Go, Javascript)</li></ol><ol type="1" id="f810f8b4-0d2b-4430-a332-5b7eabeca326" class="numbered-list" start="2"><li>Different Databases and how they serialize timestamp both in storage and over the wire (Postgres, MySQL, Cassandra) and their potential use as primary keys.</li></ol><ol type="1" id="6f5577b2-c113-4ed0-8393-6eb46f81c540" class="numbered-list" start="3"><li>How ORMs or Database Mappers in each Language manage the deserialization into a language, how they are sent over the wire, and what format the the Database takes and stores. Here, we will look at the transition from memory representation to </li></ol><ol type="1" id="9823f69d-d2cf-473a-9b32-5ac6d39810c2" class="numbered-list" start="4"><li>Serialization of timestamps across common serialization formats (ProtoBufs, JSON).</li></ol><ol type="1" id="2abfa281-a7fb-45a7-97df-84807e47b137" class="numbered-list" start="5"><li>Other related timestamp, like Time-UUIDs and Snowflake IDs that encode some time information but aren’t strict timestamps. </li></ol><ol type="1" id="acb03e98-678c-4028-a55d-cddd074af94b" class="numbered-list" start="6"><li>Encompassing all these ideas together and how time zones are accounted for as well as the different Timestamp Formats.</li></ol><p id="4483e36d-752f-4580-b564-95d33a4a713f" class="">In this article, I hope to provide a comprehensive view of what timestamps look like inside the database, when you query it from the database, when its loaded into memory (either deserialized from a propietary format like Postgres or from a standard format like ProtoBufs or JSON), or generated by the standard libraries, and the different formats a timestamp might come in inside of a library. </p><p id="0c6b79e8-6f4d-4329-948a-1a553e45408d" class="">I also want to talk about how several different Databases and the format they store JSON fr</p><p id="bd0cc52e-4669-4b89-a9a8-d8b8b7bd5460" class="">
+</p><h1 id="2b6da368-f85c-4b52-9cce-b1b225b7375f" class="">Different Universal Time Measurements</h1><p id="bf4534ec-7b93-4986-9ed0-d7015ec2d78c" class="">In laymen terms there are two different “Second Clocks” or Second counters </p><blockquote id="a3f71644-aac1-409a-903e-60f64ef73b4f" class="">The second is the duration of 9,192,631,770 periods of the radiation corresponding to the transition between the two hyperfine levels of the ground state of the caesium 133 atom.</blockquote><blockquote id="ae2a36b0-0337-4162-926b-f3e8573d46fb" class="">The second is 1/86400 (24 Hours/Day * 60 Minutes / Hour * 60 Seconds/Minute) of a solar day </blockquote><p id="d882a31c-fd3a-455f-b712-1fcd57b5b62d" class="">
+</p><ol type="1" id="b604458e-6fcc-4ec0-add2-5d48101e649e" class="numbered-list" start="1"><li>UTC - UTC reference counts “Caesium 133 atom” seconds - and occasionally has leap seconds added to the clock on certain days [ <a href="https://en.wikipedia.org/wiki/Leap_second">https://en.wikipedia.org/wiki/Leap_second</a> has a chart ] to count for the solar days being slightly longer than 1/86400 to keep the UTC Days within a second of the Solar Reference [Although, as of 2035, Leap Seconds will no longer be added for a century] </li></ol><ol type="1" id="dfeb0edc-500a-490f-a7c5-940416410ce9" class="numbered-list" start="2"><li>TAI Time has been excluding leap seconds while operating otherwise like UTC, and is now 37 seconds or so ahead of the Solar Time <a href="https://www.timeanddate.com/worldclock/other/tai">https://www.timeanddate.com/worldclock/other/tai</a></li></ol><ol type="1" id="3ec0f346-bf34-404c-8c9f-d7d344bcab3d" class="numbered-list" start="3"><li>UT-1 Is a Solar Time Reference that essentially measures the angle of rotation of Earth and hence perfectly divides the day into 1/86400 seconds. If the Earth stopped rotating, the UT-1 Day would be infinite length. As of now, UTC has been adjusted with leap seconds to stay within a second of this clock.</li></ol><ol type="1" id="c6f11235-1fb7-4920-b346-3053400c6d88" class="numbered-list" start="4"><li>Unix Timestamps - are 32 [Second] or 64 bit [Nanosecond] timestamps that reference UTC time - mapping from Unix Timestamps to UTC Leap Seconds don’t exist, rather there is a fudge factor involved to keep a UTC day 86400 Unix Timestamps every single day, either through Time Smearing or double counts of seconds. </li></ol><h2 id="73d7d027-5c06-4024-a36f-4cfc36618490" class="">Clock Sources</h2><ol type="1" id="e924c6ec-f57f-4c69-a279-9162053ca242" class="numbered-list" start="1"><li>Quarts Clocks (Say Your Computer) lose a second ~ every couple days.</li></ol><ol type="1" id="a6633134-694f-4724-95e5-2e18005d84c1" class="numbered-list" start="2"><li>Atomic Clocks (Say NIST NTP Level-0 Clocks) lose a second every billion years or so.</li></ol><h1 id="e9d5c15a-12d8-4686-8565-24ddf1413174" class="">Timestamp Formats</h1><p id="de0d356c-6158-4659-8908-b64c3f8106ba" class="">When you look up timestamp formats, you will see symbols that make up their format construction (These are a lot but not all of them)</p><table id="78865d19-c86b-495f-af00-0a0252cf1ec4" class="simple-table"><tbody><tr id="10c7aee3-f288-46e3-b29f-b2d4e69bc679"><td id="beeQ" class="">Symbol</td><td id="xZZx" class="">Meaning</td></tr><tr id="30d05de2-fb26-4eda-bb6c-0e8bc6723c90"><td id="beeQ" class="">yyyy</td><td id="xZZx" class="">Year</td></tr><tr id="ecb8216f-75b2-482a-ba7a-2432ff0d72d1"><td id="beeQ" class="">mm</td><td id="xZZx" class="">Month</td></tr><tr id="7dcc892e-6e12-4a3c-8faf-4e75b3c820f6"><td id="beeQ" class="">dd</td><td id="xZZx" class="">Day</td></tr><tr id="090c884e-8266-4464-bb6c-f02c39ce8381"><td id="beeQ" class="">EEEE</td><td id="xZZx" class="">Full Name of Week</td></tr><tr id="f93b0e1c-7684-4336-8cab-2355b3117f4f"><td id="beeQ" class="">EEE</td><td id="xZZx" class="">abbreviated Day Of Week</td></tr><tr id="2895f17b-21fb-42ff-b536-7cc7e359bc7b"><td id="beeQ" class="">HH</td><td id="xZZx" class="">Hour of Day, [0-23]</td></tr><tr id="dc76c8c9-9901-4574-a5fc-6fd50b7cc034"><td id="beeQ" class="">hh</td><td id="xZZx" class="">Hour of Day [1-12]</td></tr><tr id="c022d918-18b2-47ac-8402-5ea489523b15"><td id="beeQ" class="">a</td><td id="xZZx" class="">AM </td></tr><tr id="65790d5c-cb74-4039-b544-190da420ad08"><td id="beeQ" class="">mm</td><td id="xZZx" class="">Minute</td></tr><tr id="887aeae8-f4b3-4494-8e88-c4d070b5c2d4"><td id="beeQ" class="">ss</td><td id="xZZx" class="">Second</td></tr><tr id="f38f8639-a2e6-42e3-b7c8-38ea761acf8c"><td id="beeQ" class="">SSS</td><td id="xZZx" class="">miloseconds</td></tr><tr id="3d3bdcba-5a6f-450d-8fe5-07823d7d3cd7"><td id="beeQ" class="">ZZZZ</td><td id="xZZx" class="">Timezone +/-, with none specified its +/- from GMT </td></tr><tr id="7a702af9-362d-4f2a-a922-099488918bd0"><td id="beeQ" class="">zzz</td><td id="xZZx" class="">Timezone in Short [”GMT”, “PCT”]</td></tr></tbody></table><p id="e4153d12-eb10-4d29-989b-1f487cbfdbc0" class="">Common Strings</p><table id="9cf9b870-addd-4cf3-ba5c-7e4eb47d6ac5" class="simple-table"><tbody><tr id="71c46030-e2a4-4f4a-a4d7-f40ecc9b357d"><td id="N:WQ" class="">‘Z’</td><td id="yx=U" class="">Short for “GMT -0000” or “GMT +0000”</td></tr><tr id="2cc5b99e-344a-41a2-bdfc-18d3873de813"><td id="N:WQ" class="">:</td><td id="yx=U" class="">seperating hour and minute / minute and second </td></tr><tr id="04a4a583-3eb1-4abe-9ffb-12c75c3c8d71"><td id="N:WQ" class="">.</td><td id="yx=U" class="">Separating seconds and miloseconds</td></tr><tr id="2468bdad-12c5-4f1a-a06d-416e72cd4b67"><td id="N:WQ" class="">‘T’</td><td id="yx=U" class="">Separating The Day and the Hour </td></tr></tbody></table><p id="b88fa651-fe1c-4eb4-a319-6abdae22dd83" class="">
+</p><h2 id="694bfd1e-e613-4969-a37b-9a8310845876" class="">Example Timestamp Conversions in Go</h2><ul id="ce472459-904d-416e-84ae-07e5bef5e934" class="bulleted-list"><li style="list-style-type:disc"><strong>Year-Month-Day</strong>: A string like <code>2024-07-26</code> is assumed to be in the format <code>YYYY-MM-DD</code>.</li></ul><ul id="02d2dbff-a0d8-4b9b-87dd-f9f31d93c643" class="bulleted-list"><li style="list-style-type:disc"><strong>Time</strong>: Following a &quot;T&quot; or a space, the time is assumed to be in the format <code>hh:mm:ss</code>.</li></ul><ul id="cf8ac18d-0525-48d2-9807-aee7a6763046" class="bulleted-list"><li style="list-style-type:disc"><strong>Time Zone Offset</strong>: The presence of <code>±HH:MM</code> or <code>±HHMM</code> indicates the time zone offset from GMT.</li></ul><p id="982ddd29-9d44-495f-90c3-d47523560c14" class="">
+</p><p id="13ae74ff-802e-483c-9b00-4c90d87739ae" class="">
+</p><p id="f34f6a0f-6980-4802-bec6-206be8eecf55" class="">
+</p><p id="655b8c7c-3870-48e9-aa8d-3e9de8dac331" class="">So really, when you use a time stamp format in Go, you are choosing a few things with your reference date</p><p id="dd0a85a9-aeb9-46a0-adc8-06adb57d52df" class="">
+</p><ol type="1" id="07493310-c9d2-414b-bc90-7ed55354eaf1" class="numbered-list" start="1"><li>Time Zone Representation , -0700, -07:00, abbreviatons “PCT”, etc.</li></ol><ol type="1" id="fa581bfb-fe47-4365-97a1-187d6d188490" class="numbered-list" start="2"><li>Date / Time Seperation - “T” or “ “</li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="7801826b-95d4-4ec1-8c25-d7323840405a" class="code"><code class="language-Go" style="white-space:pre-wrap;word-break:break-all">const (
+  Layout      = &quot;01/02 03:04:05PM &#x27;06 -0700&quot; // The reference time, in numerical order.
+  ANSIC       = &quot;Mon Jan _2 15:04:05 2006&quot;
+  UnixDate    = &quot;Mon Jan _2 15:04:05 MST 2006&quot;
+  RubyDate    = &quot;Mon Jan 02 15:04:05 -0700 2006&quot;
+  RFC822      = &quot;02 Jan 06 15:04 MST&quot;
+  RFC822Z     = &quot;02 Jan 06 15:04 -0700&quot; // RFC822 with numeric zone
+  RFC850      = &quot;Monday, 02-Jan-06 15:04:05 MST&quot;
+  RFC1123     = &quot;Mon, 02 Jan 2006 15:04:05 MST&quot;
+  RFC1123Z    = &quot;Mon, 02 Jan 2006 15:04:05 -0700&quot; // RFC1123 with numeric zone
+  RFC3339     = &quot;2006-01-02T15:04:05Z07:00&quot;
+  RFC3339Nano = &quot;2006-01-02T15:04:05.999999999Z07:00&quot;
+  Kitchen     = &quot;3:04PM&quot;// Handy time stamps.
+  Stamp      = &quot;Jan _2 15:04:05&quot;
+  StampMilli = &quot;Jan _2 15:04:05.000&quot;
+  StampMicro = &quot;Jan _2 15:04:05.000000&quot;StampNano  = &quot;Jan _2 15:04:05.000000000&quot;)
+</code></pre><p id="a720ecd2-7cf1-4a75-ba0c-24ab5504214d" class="">t</p><h2 id="0d1a3295-f335-42d1-b0dc-6058391455ce" class="">ISO-8601</h2><p id="fafb040e-ef05-4519-b7c5-633a88dc7065" class="">ISO-8601 is a family of Timestamp Formats.</p><p id="90b01bb6-7121-41b3-93e8-7afe8711495f" class="">RFC 3339 is a subset of that family.</p><p id="cf849b57-3d7e-4d5e-b47d-f13aef4e8e47" class="">ISO-8601 is more flexible for Dates, but in RFC3339 also use</p><p id="afec8403-681b-42df-813d-b1d9a914349d" class="">YYYY-MM-DD, and Time Zone Offsets of +HH:MM format , Z, and does not support Location.</p><p id="a926364c-56fa-4f3b-8100-f2973e219b56" class="">If you pass information to another service that needs to use Location information for the timestamp you should not encode Timestamps into RFC3339 strings.</p><p id="dc87577b-5d7b-4396-82ca-fb37675ed2cf" class="">Postgres will allow you to include queries with information like location</p><p id="b28817c1-ee30-4e83-a87c-f70a66f57d06" class="">
+</p><h2 id="9f5bb99a-bb99-4271-b026-ab3fecfd9586" class="">Unix 32 and Unix 64 bit Timestamps</h2><p id="59f8ca61-d350-4d89-ab5b-5d2fc841ce97" class="">Unix32 Timestamps or Epoch is the number of seconds since Epoch 00:00:00 UTC on <strong>1st January 1970.</strong></p><p id="d4286e63-77d9-40e4-811b-5f03615b2005" class="">
+</p><h2 id="63fdfdab-810b-45dd-be4a-d7eb2f8661b8" class="">JSON </h2><p id="cc92e3ae-a1f0-4d2b-b718-81cd4a55712b" class="">Json has No Time Stamp Type, so you have to serialize it as an integer or string and the receiver needs to know to properly serialize the format of the string or the Unix Timestamp / Integer. </p><p id="5df7efe1-1f15-4a63-870e-48eb71593566" class="">
+</p><h2 id="f3a49dd7-7ae5-44ea-8939-87d09656b7b3" class="">JSON Deserializers</h2><h3 id="09416a25-b4c3-43b5-9832-3dfeaf58524a" class="">Go </h3><p id="2cf93d73-c605-4b49-8944-ae1cfe69edfd" class="">Go by default uses RFCC3339 or ISO1601 for serializing and deserializing timestamps.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="ca271126-e314-48be-97c7-8b35df98d982" class="code"><code class="language-JavaScript">	//What if you wrote JSON with a different serialization format
+	
+	//new date -&gt; March 14th of 2021, at 1:59:59, Pacific Daylight Time (-07:00 UTC)
+	var new_time time.Time = time.Date(2021, time.March, 14, 1, 59, 59, 0, time.FixedZone(&quot;PDT&quot;, -7*60*60))
+
+	//new string using something not rfc1123 instead of rfcc3339
+	formatted_new_time := new_time.Format(time.RFC1123)
+	
+	//Verify the Format of the string through stdout
+	fmt.Println(formatted_new_time)
+
+	// now create a new json string with the new time and Name
+	new_json_blob := []byte(fmt.Sprintf(`{&quot;Name&quot;:&quot;MyName&quot;, &quot;Timestamp&quot;:&quot;%s&quot;}`, formatted_new_time))
+
+	//Unmarshal the JSON blob into a struct
+	
+	var new_struct MyTimedStruct
+
+	//Try to deseiralize the 
+	err = json.Unmarshal(new_json_blob, &amp;new_struct)
+
+	if err != nil {
+		//It Will Panic Here.. 
+		panic(err)
+	}
+
+	//print the timestamp in time.RFC3339 format (Won&#x27;t Make It)
+	fmt.Println(new_struct.Timestamp.Format(time.RFC3339))
+	</code></pre><p id="90a6ddec-cd5b-47cb-9d3a-78f2c7a2a670" class="">
+</p><h3 id="9efe6f45-0e21-4006-bbed-1291052ec469" class="">Spring / Jackson Serializer</h3><h2 id="87f09e29-c4c4-4c7f-a023-ac6906d5f528" class="">Protobufs</h2><p id="acb0bb32-a79d-4116-824b-57f2785ccb0f" class="">Protobufs v3 now have a Timestamp type</p><p id="03976d8c-50be-40e0-a655-8e1eaf33ad9f" class="">
+</p><h2 id="a48b202e-b74f-4c9a-885b-303664006a8f" class="">Postgres </h2><p id="5d1eac0e-9681-43c4-9bf7-536d20e878c0" class="">Postgres Has a Few “Time Types”</p><ol type="1" id="b50e15b2-06f8-436f-84dc-2f0598e67e76" class="numbered-list" start="1"><li>TIMESTAMP - A Date and a Time without time zone information</li></ol><ol type="1" id="90eeb7d0-d49e-4a40-bb53-0258a62ea695" class="numbered-list" start="2"><li>TIMESTAMP WITH TIME ZONE - A Date and a TIme with Zone Information, but is always stored as UTC time and can cast its time to a clients request</li></ol><ol type="1" id="3755020e-089b-452c-9008-b90bb73357c1" class="numbered-list" start="3"><li>DATE - A Date</li></ol><ol type="1" id="6d302fce-949d-438b-ab2a-d8b153e654a6" class="numbered-list" start="4"><li>TIME - A Time</li></ol><ol type="1" id="eab1e182-a003-4575-b756-e0422e1d063b" class="numbered-list" start="5"><li>Time With Time Zone - A Time that stores time zones (Unlike Timestamp WITH TIME ZONE)</li></ol><p id="57a857c5-0af2-4c18-bd11-ee2b645e6c7f" class="">
+</p><p id="8bffc805-cbba-42c8-8ccd-183f45805f2e" class="">Lets Use the Postgres CLI</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="927b0bdb-251b-4b8e-b356-8e19f9ffe4ec" class="code"><code class="language-SQL"> SELECT now(); -- RETURNS a TIMESTAMP WITH TIME ZONE --
+              now
+-------------------------------
+ 2024-07-30 14:47:29.243314-07
+(1 row)
+
+SHOW timezone; --SHOWS LOCATION TO USE AGAINST TIME ZONE DATABASE --
+      TimeZone
+---------------------
+ America/Los_Angeles
+(1 row)
+CREATE TABLE datetime_examples (
+    id SERIAL PRIMARY KEY,
+    event_name VARCHAR(100),
+    event_date DATE,
+    event_time TIME,
+    event_timestamp TIMESTAMP,
+    event_timestamptz TIMESTAMP WITH TIME ZONE,
+    event_interval INTERVAL,
+    event_time_no_tz TIME WITHOUT TIME ZONE,
+    event_time_with_tz TIME WITH TIME ZONE
+);
+CREATE TABLE
+
+SELECT  &#x27;2024-07-30 17:30:00+05:00&#x27;::timestamp with time zone; --CASTS the string literal to a timestamp with time zone--
+      timestamptz
+------------------------
+ 2024-07-30 05:30:00-07
+(1 row)
+SELECT  &#x27;2024-07-30 17:30:00+05:00&#x27;::timestamp; --You Can See It Ignored The +05:00--
+      timestamp
+---------------------
+ 2024-07-30 17:30:00
+(1 row)
+INSERT INTO datetime_examples (
+    event_name,
+    event_date,
+    event_time,
+    event_timestamp,
+    event_timestamptz,
+    event_interval,
+    event_time_no_tz,
+    event_time_with_tz
+) VALUES (
+    &#x27;Meeting&#x27;,
+    &#x27;2024-07-30&#x27;,
+    &#x27;14:30:00&#x27;,
+    &#x27;2024-07-30 14:30:00&#x27;,
+    &#x27;2024-07-30 14:30:00+02&#x27;,
+    &#x27;1 day&#x27;,
+    &#x27;14:30:00&#x27;,
+    &#x27;14:30:00+02&#x27;
+);
+
+INSERT INTO datetime_examples (
+    event_name,
+    event_date,
+    event_time,
+    event_timestamp,
+    event_timestamptz,
+    event_interval,
+    event_time_no_tz,
+    event_time_with_tz
+) VALUES (
+    &#x27;Meeting&#x27;,
+    &#x27;2044-07-30&#x27;,
+    &#x27;14:30:00&#x27;,
+    &#x27;2044-07-30 14:30:00&#x27;,
+    &#x27;2044-07-30 14:30:00+02&#x27;,
+    &#x27;1 day&#x27;,
+    &#x27;14:30:00&#x27;,
+    &#x27;14:30:00+02&#x27;
+);
+SELECT  &#x27;2024-07-30 17:30:00+05:00&#x27;::date;
+    date
+------------
+ 2024-07-30
+(1 row)
+SELECT  &#x27;2024-07-30 17:30:00+05:00&#x27;::time;
+   time
+----------
+ 17:30:00
+(1 row)
+ SELECT  &#x27;2024-07-30 17:30:00+05:00&#x27;::time with time zone; --You can see Time Zone information is kept&#x27;
+   timetz
+-------------
+ 17:30:00+05
+(1 row)
+ SELECT event_time_with_tz AT TIME ZONE &#x27;America/Los_Angeles&#x27; FROM datetime_examples;
+  timezone
+-------------
+ 05:30:00-07
+ 05:30:00-07
+(2 rows)
+
+spring_timestamp=# SELECT event_time_with_tz FROM datetime_examples;
+ event_time_with_tz
+--------------------
+ 14:30:00+02
+ 14:30:00+02
+(2 rows)
+-- YOU CAN SEE it subtracted 9 Hours instead of 7, because it stored time zone information--</code></pre><p id="896c7074-648c-4063-ab16-9869f00a6849" class="">Time Commands We Will Be Covering</p><p id="cf07dde2-2352-464c-b5d5-148e54fba4cc" class="">
+</p><ol type="1" id="b073e372-f2e5-4d8d-861d-a6cd36122ac3" class="numbered-list" start="1"><li>age - Either takes 1 argument and does something? or takes 2 arguments and gets the time1-time2, completely ignoring time zones. </li></ol><ol type="1" id="73e2292e-0563-45d2-9065-b86face5afad" class="numbered-list" start="2"><li>BETWEEN / AND - Filters In Query for Time Stamps</li></ol><ol type="1" id="edbb68c2-8485-46ed-ab87-7a08b6bc0123" class="numbered-list" start="3"><li>Extract - Used to Select an Extraction from the TIme / Date / Interval/ Timestamp, such as  year, month, date, second, or seconds per epoch</li></ol><ol type="1" id="95b7d2de-57b3-46d6-a6eb-4d254d3703e3" class="numbered-list" start="4"><li>INTERVAL - Can be used in the query to add an amount of time to a column</li></ol><ol type="1" id="6b5ff781-8303-400c-b9f6-e00cb89d4d45" class="numbered-list" start="5"><li>AT TIME ZONE - Turns a “Timestamp with Time Zone” to a “Timestamp Without a Time Zone” by evaluating the Timestamp at a particular timezone.</li></ol><ol type="1" id="6f4e0b69-118c-4260-8479-e4fec310f51f" class="numbered-list" start="6"><li>year/month/hour/minute/second epoch </li></ol><ol type="1" id="228d9303-65f6-40d0-a09b-1736d819f7d7" class="numbered-list" start="7"><li>::  → Type Cast, can be used to query against timestamp by casting string to timestamp</li></ol><p id="fd0572bc-0f05-41b8-be4e-86b0bc72f8ed" class="">
+</p><p id="29ed13e9-5a98-432e-9944-bfea3d1196d5" class="">List of Exercises</p><ol type="1" id="be9473af-81fa-40e8-a610-6acba31881c8" class="numbered-list" start="1"><li>Get the age of each timestamp from now </li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="5140de48-8749-4883-8b0e-ac2b5307b9b8" class="code"><code class="language-SQL">SELECT * FROM datetime_examples WHERE event_timestamp BETWEEN &#x27;2024-10-05&#x27; AND &#x27;2055-10-05&#x27;;
+SELECT age(event_timestamp), EXTRACT(month from age(event_timestamptz)) FROM datetime_examples;
+SELECT (event_timestamp) + INTERVAL &#x27;1 day&#x27; FROM datetime_examples;
+
+ SELECT EXTRACT(EPOCH FROM event_timestamptz) FROM datetime_examples;
+      extract
+-------------------
+ 1722342600.000000
+ 2353494600.000000
+(2 rows)
+
+spring_timestamp=# SELECT EXTRACT(EPOCH FROM event_timestamp) FROM datetime_examples;
+      extract
+-------------------
+ 1722349800.000000
+ 2353501800.000000
+(2 rows)
+SELECT age(event_timestamp, &#x27;2034-07-30 14:30:00+05:00&#x27;::timestamp WITH time zone) FROM datetime_examples;
+--YOU CAN SEE IT AS ASSUMES that the timestamp with no time zone is in your query time zone&#x27;
+
+SELECT age(event_timestamp AT TIME ZONE &#x27;UTC&#x27;, &#x27;2034-07-30 14:30:00+05:00&#x27;::timestamp WITH time zone)
+ FROM datetime_examples;
+                 age
+--------------------------------------
+ -9 years -11 mons -30 days -19:00:00
+ 10 years 05:00:00
+
+ SELECT event_timestamp, event_timestamptz AT TIME ZONE &#x27;America/New_York&#x27; FROM datetime_examples;
+   event_timestamp   |      timezone
+---------------------+---------------------
+ 2024-07-30 14:30:00 | 2024-07-30 08:30:00
+ 2044-07-30 14:30:00 | 2044-07-30 08:30:00
+(2 rows)
+ SELECT EXTRACT(EPOCH FROM (event_timestamp AT TIME ZONE &#x27;America/Los_Angeles&#x27;) AT TIME ZONE &#x27;UTC&#x27;) AS unix_time_utc
+FROM datetime_examples;
+   unix_time_utc
+-------------------
+ 1722375000.000000
+ 2353527000.000000
+(2 rows)
+
+spring_timestamp=# SELECT EXTRACT(EPOCH FROM (event_timestamp AT TIME ZONE &#x27;America/New_York&#x27;) AT TIME ZONE &#x27;UTC&#x27;) AS unix_time_utc
+FROM datetime_examples;
+   unix_time_utc
+-------------------
+ 1722364200.000000
+ 2353516200.000000
+ 
+ SELECT age(event_timestamptz AT TIME ZONE &#x27;America/Los_Angeles&#x27;, &#x27;2034-07-30 14:30:00+05:00&#x27;::timesta
+mp WITH TIME zone) FROM datetime_examples;
+                 age
+--------------------------------------
+ -9 years -11 mons -30 days -21:00:00
+ 10 years 03:00:00
+(2 rows)
+
+ SELECT EXTRACT(epoch FROM event_timestamp), event_timestamp, EXTRACT (epoch FROM event_timestamptz),
+event_timestamptz from datetime_examples;
+      extract      |   event_timestamp   |      extract      |   event_timestamptz
+-------------------+---------------------+-------------------+------------------------
+ 1722349800.000000 | 2024-07-30 14:30:00 | 1722342600.000000 | 2024-07-30 05:30:00-07
+ 2353501800.000000 | 2044-07-30 14:30:00 | 2353494600.000000 | 2044-07-30 05:30:00-07
+(2 rows)</code></pre><h2 id="a690ab91-153f-4eed-8eb0-927ca1fc344b" class="">ORMS and Drivers</h2><p id="26f8e289-bc81-4897-84f9-b92ed62a5238" class="">
+</p><p id="7192b118-af1d-4637-9da0-52bd2d7fc72f" class="">Usually when you work with ORMs, kind of like JSON Serializers, they will convert all timestamps with time zones to UTC. For The most part, this would be preferable and you should in most cases not change this default behavior.</p><h2 id="6d36fafa-128f-46d0-9b68-33f8a840f597" class="">JPA (Spring Data)</h2><p id="4eb33cd2-ddbe-4fc0-bc4d-cf1dd657d4ae" class="">JPA automatically sets the time zone to UTC</p><p id="c61c1259-52a6-45a8-b38c-72488f78ba36" class="">Model:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="56aee4bf-7c61-4b49-9a16-93d33d74e0d0" class="code"><code class="language-Java">package com.compressibleflowcalculator.Timestamps_Projects.Java.Models;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
+/**
+ * 
+ * This will be used with Entities that have a timestamp
+ * 
+ * JPA Model
+ * 
+ */
+
+
+@Entity
+ public class ModelWithTimestamp {
+     
+    //Should Be JSON Serialized
+
+    @Id
+    @JsonProperty(&quot;name&quot;)
+    public String name;
+
+    //Time Stamp, Postgres Definition is TIMESTAMP WITH TIME ZONE
+    
+    @JsonProperty(&quot;timestamp&quot;)
+    // pattern be RFC 1132
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = &quot;yyyy-MM-dd&#x27;T&#x27;HH:mm:ss.SSSZ&quot;)
+    @Column(columnDefinition = &quot;TIMESTAMP WITH TIME ZONE&quot;)
+    @org.springframework.beans.factory.annotation.Value(&quot;${spring.jpa.properties.hibernate.jdbc.time_zone}&quot;)
+    public OffsetDateTime  timestamp;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public OffsetDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(OffsetDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+     
+
+    public ModelWithTimestamp(String name, OffsetDateTime timestamp) {
+        this.name = name;
+        this.timestamp = timestamp;
+    }
+
+    public ModelWithTimestamp() {
+    }
+
+ }</code></pre><h2 id="e8a43a4a-fda3-4314-8f33-8cbb34abb42b" class="">Entity Framework (C#)</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="f77b4924-9d35-42ee-a5e0-8436ff239577" class="code"><code class="language-Java">
+namespace Models {
+
+    public class ModelWithTimestamp {
+
+        //ID auto-generated UUID in Postgres
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+
+        //Time Type in C#??
+        public DateTimeOffset Timestamp { get; set; }
+        
+
+    }
+
+    public class ModelWithTimestampRequest {
+        public string Name { get; set; }
+
+        public DateTimeOffset Timestamp { get; set; }
+    }
+
+    public class Notification {
+
+        // ID auto-generated UUID in Postgres
+        public Guid Id { get; set; }
+
+        public DateTimeOffset Timestamp { get; set; }
+
+        public Int32 UnixTimestamp32 { get; set; }
+
+        public Int64 UnixTimestamp64 { get; set; }
+    }
+}</code></pre><p id="0002d203-c55a-4d59-99ab-97275085ec5d" class="">Modifying Timestamps in C# (Very Similar to Go)</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="62ea76f7-aa1e-4e9d-a42a-75087114808f" class="code"><code class="language-Java">    // Subtract 1 hour, 30 minutes, 2 seconds, and 500 milliseconds from the timestamp
+           var TimeForNotificaition = newModel.Timestamp.Subtract(new TimeSpan(0,1,30,2,500));
+
+
+
+            var timeInt32 = (Int32) TimeForNotificaition.ToUnixTimeSeconds();
+            var timeInt64 = TimeForNotificaition.ToUnixTimeMilliseconds();</code></pre><h2 id="380a3eae-2d06-4322-be51-f251142f55ac" class="">GO (Pgxpool)</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="8ad2d16f-100d-47e9-9f55-5a824a5a974d" class="code"><code class="language-SQL"> CREATE TABLE go_times (
+id SERIAL PRIMARY KEY,
+inserted_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+timer TIMESTAMP,
+timer_tz TIMESTAMP WITH TIME ZONE
+);
+</code></pre><p id="c15bb5f7-63df-47ad-b5ae-c2787e93bcae" class="">]</p><p id="17565717-0007-4e98-b95d-075ca22e7fe6" class="">RUN with TZ=UTC go run main.go</p><p id="dae2b121-3587-4e2b-ba3f-0a49425aa75b" class="">TZ=America/New_York, etc.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
